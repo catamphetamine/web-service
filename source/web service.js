@@ -14,6 +14,7 @@ import koa_locale    from 'koa-locale'
 
 import errors      from './errors'
 import promisify   from './promisify'
+import { is_object } from './helpers'
 
 import error_handler  from './middleware/error handler'
 import authentication from './middleware/authentication'
@@ -327,8 +328,16 @@ export default function web_server(options = {})
 	}
 
 	// runs http server
-	result.listen = (port, host = '0.0.0.0') =>
+	result.listen = (port, host) =>
 	{
+		if (is_object(port))
+		{
+			host = port.host
+			port = port.port
+		}
+
+		host = host || '0.0.0.0'
+
 		return new Promise((resolve, reject) =>
 		{
 			// the last route - throws not found error

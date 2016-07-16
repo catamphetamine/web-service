@@ -70,23 +70,7 @@ export default function(options = {})
 
 	const result = 
 	{
-		listen: (port, host) =>
-		{
-			if (is_object(port))
-			{
-				port = port.port
-				host = port.host
-			}
-
-			web.listen(port, host).then(() =>
-			{
-				log.info(`${options.name} service is listening at http://${host || 'localhost'}:${port}`)
-			},
-			error =>
-			{
-				log.error(error, 'Api service shutdown')
-			})
-		}
+		listen: (port, host) => web.listen(port, host)
 	}
 
 	return result
