@@ -8,5 +8,6 @@ exports.errors = require('./build/errors')
 exports.api = require('./build/api')
 exports.http = require('./build/http')
 exports.acl = require('./build/acl')
+exports.jwt = require('./build/middleware/authentication').issue_jwt_token
 
 exports['default'] = web_service

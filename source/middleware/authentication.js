@@ -170,3 +170,19 @@ export default function(authentication, keys)
 		await next()
 	}
 }
+
+export function issue_jwt_token(payload, keys, user_id, jwt_id)
+{
+	if (!keys)
+	{
+		throw new Error(`JWT encryption "keys" weren't supplied`)
+	}
+
+	const token = jwt.sign(payload, keys[0],
+	{
+		subject : user_id,
+		jwtid   : jwt_id
+	})
+
+	return token
+}

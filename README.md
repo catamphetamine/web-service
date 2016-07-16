@@ -19,12 +19,10 @@ import web_service, { api } from 'web-service'
 
 ...
 
-const service = web_service
-({
-	routing: true
-})
+const service = web_service({ routing: true })
 
-// Will be available at `/test` path
+// REST routes.
+// Will be available at `/api/test` path.
 service.get ('/test', async () => ({ works  : true }))
 service.post('/test', async () => ({ posted : true }))
 
@@ -34,22 +32,53 @@ service.listen(3000)
 
 const service = web_service
 ({
-	routing: '/api',
-	parse_body: false
+	// REST routes prefix
+	routing: '/api', // or just `true`
+
+	// Enables JWT authentication.
+	//
+	// Reads `authentication` cookie
+	// holding a signed JWT token,
+	// which means this cookie is to be set
+	// manually during user login process.
+	// 
+	// import { jwt } from 'web-service'
+	//
+	// function login(user_id)
+	// {
+	//   const jwt_id = '...'
+	//   const payload = { role: 'admin' }
+	//   const token = jwt(payload, keys, user_id, jwt_id)
+	//   set_cookie('authentication', token, { signed: false })
+	// }
+	//
+	// First supply the encryption key.
+	keys: ['secret'],
+	//
+	// Then supply a function which
+	// parses JWT token payload
+	// into a `user` variable
+	// (which will be accessible in `api` service
+	//  providing means for user authorization)
+	authentication: payload => ({ role: payload.role })
 })
 
-// Will be available at `/api/test` path
+// REST routes.
+// Will be available at `/api/test` path.
 service.get ('/test', async () => ({ works  : true }))
 service.post('/test', async () => ({ posted : true }))
 
+// Servers static files from '__dirname' at '/assets' path
 service.serve_static_files('/assets', __dirname)
 
+// Enables file upload at path '/'
 service.file_upload
 ({
 	upload_folder: __dirname,
 	on_file_uploaded: () => {}
 })
 
+// Enables proxying to another HTTP server at path '/proxied'
 service.proxy('/proxied', 'http://google.ru')
 
 service.listen(3000)
