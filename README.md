@@ -88,7 +88,7 @@ const service = api
 					throw new errors.Input_rejected(`Invalid id: ${id}`)
 				}
 
-				return database.get(id)
+				return await database.get(id)
 			})
 
 			// web 1.0 mode (redirects to a URL when finished)
@@ -99,7 +99,7 @@ const service = api
 					throw new errors.Input_rejected(`Invalid id: ${id}`)
 				}
 
-				database.save(input)
+				await database.save(input)
 
 				return { redirect: '/done' }
 			},
@@ -147,7 +147,7 @@ export default function(api)
 {	
 	api.post('/login', async ({ name, password }, { set_cookie }) =>
 	{
-		const user = database.users.get({ name })
+		const user = await database.users.get({ name })
 
 		if (!user)
 		{
@@ -165,7 +165,7 @@ export default function(api)
 		set_cookie('authentication', token, { signed: false })
 	}
 
-	api.get('/restricted-data', async ({ parameter_1, parameter_2 }, { user }) =>
+	api.get('/restricted-data', async ({ parameter }, { user }) =>
 	{
 		if (!user)
 		{
@@ -177,7 +177,7 @@ export default function(api)
 			throw new errors.Access_denied(`Must be an adminstrator to view the data`)
 		}
 
-		return { data: [...] }
+		return await database.query(parameter)
 	})
 }
 ```
