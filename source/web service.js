@@ -299,9 +299,6 @@ export default function web_server(options = {})
 		web.use(file_upload(settings, log))
 	}
 
-	// standard Http errors
-	result.errors = errors
-
 	// can serve static files
 	result.serve_static_files = function(url_path, filesystem_path)
 	{

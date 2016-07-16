@@ -57,8 +57,6 @@ export default function(options = {})
 		}
 	}
 
-	api.errors = web.errors
-
 	if (!options.api)
 	{
 		throw new Error(`Api service "api" array is required`)
