@@ -22,9 +22,8 @@ import web_service from 'web-service'
 const service = web_service({ routing: true })
 
 // REST routes.
-// Will be available at `/test` path.
-service.get ('/test', async () => ({ status : 'ok' }))
-service.post('/test', async () => ({ result : true }))
+service.get ('/items/:id', async ({ id }) => ({ color : 'black' }))
+service.post('/save/:id',  async (data) => ({ result : true }))
 
 service.listen(3000)
 ```
