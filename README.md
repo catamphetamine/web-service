@@ -23,8 +23,8 @@ const service = web_service({ routing: true })
 
 // REST routes.
 // Will be available at `/test` path.
-service.get ('/test', async () => ({ works  : true }))
-service.post('/test', async () => ({ posted : true }))
+service.get ('/test', async () => ({ status : 'ok' }))
+service.post('/test', async () => ({ result : true }))
 
 service.listen(3000)
 
