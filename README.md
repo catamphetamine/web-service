@@ -89,11 +89,7 @@ service.listen(3000)
 
 const service = api
 ({
-	name: 'Test',
-	access_list: [],
-	authentication: () => {},
-	routing: '/api',
-	parse_body: true,
+	routing: true,
 	api:
 	[
 		function(api)
