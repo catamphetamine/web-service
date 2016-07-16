@@ -39,7 +39,8 @@ const service = web_service
 	//
 	// Reads `authentication` cookie
 	// holding a signed JWT token,
-	// which means this cookie is to be set
+	// which means that you should also
+	// set this `authentication` cookie
 	// manually during user login process.
 	// 
 	// import { jwt } from 'web-service'
