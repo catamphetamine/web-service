@@ -70,7 +70,7 @@ The `utilities` object holds:
 Mostly is simply a `routing: true` webservice with added support for Web 1.0 operation mode and a convenient `api` parameter for grouping api methods into separate modules.
 
 ```js
-import { api } from 'web-service'
+import { api, errors } from 'web-service'
 
 // Supports Web 1.0 Mode (for DarkNet: Tor, etc)
 
@@ -81,10 +81,29 @@ const service = api
 		function(api)
 		{
 			// web 2.0 mode (ajax)
-			api.get('/get/:id', async ({ id }) => ({ works: true }))
+			api.get('/get/:id', async ({ id }) =>
+			{
+				if (id <= 0)
+				{
+					throw new errors.Input_rejected(`Invalid id: ${id}`)
+				}
+
+				return database.get(id)
+			})
 
 			// web 1.0 mode (redirects to a URL when finished)
-			api.legacy.post('/save/:id', async ({ id }) => ({ redirect: '/done' }), (error) => '/error')
+			api.legacy.post('/save/:id', async (input) =>
+			{
+				if (input.id <= 0)
+				{
+					throw new errors.Input_rejected(`Invalid id: ${id}`)
+				}
+
+				database.save(input)
+
+				return { redirect: '/done' }
+			},
+			(error) => '/error')
 		},
 		...
 	]
