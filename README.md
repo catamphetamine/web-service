@@ -12,12 +12,12 @@ Easy web services on Node.js
 npm install web-service --save
 ```
 
-## Usage
+## Webservice
+
+Example:
 
 ```js
-import web_service, { api } from 'web-service'
-
-...
+import web_service from 'web-service'
 
 const service = web_service({ routing: true })
 
@@ -27,84 +27,141 @@ service.get ('/test', async () => ({ status : 'ok' }))
 service.post('/test', async () => ({ result : true }))
 
 service.listen(3000)
+```
 
-...
+Each `routing` handler is passed two arguments
 
-const service = web_service
-({
-	// REST routes prefix
-	routing: '/api', // or just `true`
+ * `parameters` object (includes HTTP GET query parameters, HTTP POST body data, route parameters)
 
-	// Enables JWT authentication.
-	//
-	// Reads `authentication` cookie
-	// holding a signed JWT token,
-	// which means that you should also
-	// set this `authentication` cookie
-	// manually during user login process.
-	// 
-	// import { jwt } from 'web-service'
-	//
-	// function login(user_id)
-	// {
-	//   const jwt_id = '...'
-	//   const payload = { role: 'admin' }
-	//   const token = jwt(payload, keys, user_id, jwt_id)
-	//   set_cookie('authentication', token, { signed: false })
-	// }
-	//
-	// First supply the encryption key.
-	keys: ['secret'],
-	//
-	// Then supply a function which
-	// parses JWT token payload
-	// into a `user` variable
-	// (which will be accessible in `api` service
-	//  providing means for user authorization)
-	authentication: payload => ({ role: payload.role })
-})
+ * `utilities` object
 
-// REST routes.
-// Will be available at `/api/test` path.
-service.get ('/test', async () => ({ works  : true }))
-service.post('/test', async () => ({ posted : true }))
+The `utilities` object holds:
 
-// Servers static files from '__dirname' at '/assets' path
-service.serve_static_files('/assets', __dirname)
+```js
+{
+	// Incoming HTTP request IP address
+	// (Trusts `X-Forwarded-For` header)
+	ip,
 
-// Enables file upload at path '/'
-service.file_upload
-({
-	upload_folder: __dirname,
-	on_file_uploaded: () => {}
-})
+	// Cookie helpers
+	get_cookie,
+	set_cookie,
+	destroy_cookie,
 
-// Enables proxying to another HTTP server at path '/proxied'
-service.proxy('/proxied', 'http://google.ru')
+	// Data extracted from Json Web Token (if any)
+	user,
+	// Json Web Token
+	authentication_token,
+	// Json Web Token id
+	authentication_token_id,
 
-service.listen(3000)
+	// The secret keys passed to webservice
+	keys,
 
-...
+	// An HTTP client
+	// (`.get('/data', parameters)`,
+	//  `.post('/data', data)`,
+	//  etc)
+	http
+}
+```
 
-// Supports Web 1.0 Mode
+## API webservice
+
+Mostly is simply a `routing: true` webservice with added support for Web 1.0 operation mode and a convenient `api` parameter for grouping api methods into separate modules.
+
+```js
+import { api } from 'web-service'
+
+// Supports Web 1.0 Mode (for DarkNet: Tor, etc)
 
 const service = api
 ({
-	routing: true,
 	api:
 	[
 		function(api)
 		{
-			// web 2.0 (ajax)
-			api.get('/test', async () => ({ works: true }))
-			// web 1.0 (redirects to a page)
-			api.legacy.get('/test', async () => ({ redirect: '/done' }))
+			// web 2.0 mode (ajax)
+			api.get('/get/:id', async ({ id }) => ({ works: true }))
+
+			// web 1.0 mode (redirects to a URL when finished)
+			api.legacy.post('/save/:id', async ({ id }) => ({ redirect: '/done' }), (error) => '/error')
 		},
 		...
 	]
 })
 
 service.listen(3000)
+```
+
+Each `api` handler is passed the same two arguments as each `routing` handler does (in Web 1.0 mode there's also the third argument which is called in case of an error being thrown from the handler).
+
+## Sessions
+
+Currently I've disabled using "sessions" in this library since I'm not using sessions in my projects. Maybe I can turn them back on, if someone requests that feature (in that case create an issue).
+
+## JWT authentication
+
+To enable [Json Web Tokens](https://jwt.io/) authentication, supply two parameters:
+
+ * `keys` array, which is an array of secret keys for data encryption (can have a single element, for example) and is used for siging Json Web Tokens being issued. The newest keys are added to the beginning of the array while the oldest (compromised) ones are moved to the end of the array eventually being removed (see [`keygrip`](https://www.npmjs.com/package/keygrip)). This enables secret key rotation which adds security.
+
+ * `authentication` function, which extracts user data from decrypted Json Web Token payload.
+
+Example:
+
+```js
+const service = web_service
+({
+	keys: ['secret'],
+	authentication: payload => ({ role: payload.role })
+})
+```
+
+And also set `authentication` cookie on user login. The contents of the cookie is gonna be the signed Json Web Token (data inside the token can be read, i.e. it's not encrypted, but it can't be modified without breaking it because it is signed with a secret key).
+
+Example (using `api` service):
+
+```js
+import { jwt, errors } from 'web-service'
+
+export default function(api)
+{	
+	api.post('/login', async ({ name, password }, { set_cookie }) =>
+	{
+		const user = database.users.get({ name })
+
+		if (!user)
+		{
+			throw new errors.Not_found()
+		}
+
+		if (password !== user.password)
+		{
+			throw new errors.Input_rejected(`Wrong password`)
+		}
+
+		const jwt_id = '...' // a randomly generated unique id of some kind
+		const payload = { role: 'admin' }
+		const token = jwt(payload, keys, user_id, jwt_id)
+		set_cookie('authentication', token, { signed: false })
+	}
+
+	api.get('/restricted-data', async ({ parameter_1, parameter_2 }, { user }) =>
+	{
+		if (!user)
+		{
+			throw new errors.Unauthenticated()
+		}
+
+		if (user.role !== 'admin')
+		{
+			throw new errors.Access_denied(`Must be an adminstrator to view the data`)
+		}
+
+		return { data: [...] }
+	})
+}
 ```
 
 ## Contributing
