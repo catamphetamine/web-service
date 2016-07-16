@@ -21,7 +21,7 @@ import web_service from 'web-service'
 
 const service = web_service({ routing: true })
 
-// REST routes.
+// REST API routes
 service.get ('/items/:id', async ({ id }) => ({ color : 'black' }))
 service.post('/save/:id',  async (data) => ({ result : true }))
 
