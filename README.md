@@ -22,7 +22,7 @@ import web_service, { api } from 'web-service'
 const service = web_service({ routing: true })
 
 // REST routes.
-// Will be available at `/api/test` path.
+// Will be available at `/test` path.
 service.get ('/test', async () => ({ works  : true }))
 service.post('/test', async () => ({ posted : true }))
 
