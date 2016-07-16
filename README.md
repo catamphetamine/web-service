@@ -162,6 +162,7 @@ export default function(api)
 		const jwt_id = '...' // a randomly generated unique id of some kind
 		const payload = { role: 'admin' }
 		const token = jwt(payload, keys, user_id, jwt_id)
+		
 		set_cookie('authentication', token, { signed: false })
 	}
 
