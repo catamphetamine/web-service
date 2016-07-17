@@ -121,7 +121,13 @@ Each `api` handler is passed the same two arguments as each `routing` handler do
 
 ## Sessions
 
-Currently I've disabled using "sessions" in this library since I'm not using sessions in my projects. Maybe I can turn them back on, if someone requests that feature (in that case create an issue).
+Currently I've disabled using "sessions" in this library since I'm not using sessions anymore in my projects. Maybe I can turn them back on, if someone requests that feature (in that case create an issue).
+
+I'm now using [Json Web Tokens](https://jwt.io/) instead of sessions in my project. Sessions are stateful while Json Web Tokens are stateless. Json Web Tokens provide means for user authentication and authorization. And that's enough for most (if not all) real-world scenarios. 
+
+If someone needs to store additional user data in a "session", such as contents of a shopping cart, then I think it's better to store that data in a database instead so that the user could return a week later and not loose his shopping cart due to expiration (or a server restart).
+
+"Registration" is kind of a relic of the past which can turn away website visitors nowadays. Instead one may consider "registering" dummy users under the hood for website users once they trigger storing some data in a "session" (e.g. hitting "Add to cart" button), and then storing that data in a persistent database. That's more work for sure but also better user experience.
 
 ## JWT authentication
 
