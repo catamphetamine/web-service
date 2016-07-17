@@ -94,24 +94,26 @@ async function authenticate({ authentication, keys, validate_token })
 
 	// validate token 
 	// (for example, that it has not been revoked)
-
-	if (!this.validating_jwt_id)
+	if (validate_token)
 	{
-		this.validating_jwt_id = validate_token(token, this)
-	}
+		if (!this.validating_jwt_id)
+		{
+			this.validating_jwt_id = validate_token(token, this)
+		}
 
-	// takes some milliseconds to finish
-	//
-	// validates the token via an Http request
-	// to the authentication service
-	const is_valid = (await this.validating_jwt_id).valid
+		// takes some milliseconds to finish
+		//
+		// validates the token via an Http request
+		// to the authentication service
+		const is_valid = (await this.validating_jwt_id).valid
 
-	delete this.validating_jwt_id
+		delete this.validating_jwt_id
 
-	if (!is_valid)
-	{
-		this.authentication_error = new errors.Unauthenticated(`Token revoked`)
-		return
+		if (!is_valid)
+		{
+			this.authentication_error = new errors.Unauthenticated(`Token revoked`)
+			return
+		}
 	}
 
 	this.jwt_id = jwt_id
