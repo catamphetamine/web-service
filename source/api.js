@@ -1,8 +1,8 @@
 import path from 'path'
 import fs   from 'fs'
 
-import web_service from './web service'
-import Url  from './url'
+import web_service   from './web service'
+import Url           from './url'
 import { is_object } from './helpers'
 
 export default function(options = {})

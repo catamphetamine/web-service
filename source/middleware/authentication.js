@@ -1,9 +1,6 @@
 import jwt from 'jsonwebtoken'
 
-import http_client from '../http'
-import errors      from '../errors'
-
-const validate_token_url = '/validate-token'
+import errors from '../errors'
 
 function get_jwt_token(context)
 {
@@ -37,20 +34,10 @@ function get_jwt_token(context)
 	return { error: 'JWT token not found' }
 }
 
-function validate_token(jwt, bot)
-{
-	return http_client.get
-	(
-		`${address_book.authentication_service}${validate_token_url}`,
-		{ bot },
-		{ headers: { Authorization: `Bearer ${jwt}` } }
-	)
-}
-
 // takes some milliseconds to finish
 // because it validates the token via an Http request
 // to the authentication service
-async function authenticate(authentication, keys)
+async function authenticate({ authentication, keys, validate_token })
 {
 	const { token, error } = get_jwt_token(this)
 
@@ -107,26 +94,24 @@ async function authenticate(authentication, keys)
 
 	// validate token 
 	// (for example, that it has not been revoked)
-	if (this.path !== validate_token_url)
+
+	if (!this.validating_jwt_id)
 	{
-		if (!this.validating_jwt_id)
-		{
-			this.validating_jwt_id = validate_token(token, this.query.bot)
-		}
+		this.validating_jwt_id = validate_token(token, this)
+	}
 
-		// takes some milliseconds to finish
-		//
-		// validates the token via an Http request
-		// to the authentication service
-		const is_valid = (await this.validating_jwt_id).valid
+	// takes some milliseconds to finish
+	//
+	// validates the token via an Http request
+	// to the authentication service
+	const is_valid = (await this.validating_jwt_id).valid
 
-		delete this.validating_jwt_id
+	delete this.validating_jwt_id
 
-		if (!is_valid)
-		{
-			this.authentication_error = new errors.Unauthenticated('Token revoked')
-			return
-		}
+	if (!is_valid)
+	{
+		this.authentication_error = new errors.Unauthenticated(`Token revoked`)
+		return
 	}
 
 	this.jwt_id = jwt_id
@@ -162,11 +147,11 @@ async function authenticate(authentication, keys)
 	}
 }
 
-export default function(authentication, keys)
+export default function(options)
 {
 	return async function(ctx, next)
 	{
-		await authenticate.call(ctx, authentication, keys)
+		await authenticate.call(ctx, options)
 		await next()
 	}
 }

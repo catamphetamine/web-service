@@ -106,7 +106,7 @@ import routing        from './middleware/routing'
 //       path        - the URL path to mount the requests for
 //       destination - where to proxy these requests to
 //
-export default function web_server(options = {})
+export default function web_service(options = {})
 {
 	// this object will be returned
 	const result = {}
@@ -176,7 +176,12 @@ export default function web_server(options = {})
 
 	if (options.authentication)
 	{
-		web.use(authentication(options.authentication, options.keys))
+		web.use(authentication
+		({
+			authentication : options.authentication,
+			keys           : options.keys,
+			validate_token : options.validate_token
+		}))
 	}
 
 	if (options.session)

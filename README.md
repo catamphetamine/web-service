@@ -57,10 +57,15 @@ The `utilities` object holds:
 	// The secret keys passed to webservice
 	keys,
 
-	// An HTTP client
+	// A handy HTTP client
 	// (`.get('/data', parameters)`,
 	//  `.post('/data', data)`,
 	//  etc)
+	// 
+	// When using Json Web Token authentication
+	// this HTTP client will send requests
+	// with "Authorization" HTTP header set appropriately.
+	//
 	http
 }
 ```
@@ -124,7 +129,9 @@ To enable [Json Web Tokens](https://jwt.io/) authentication, supply two paramete
 
  * `keys` array, which is an array of secret keys for data encryption (can have a single element, for example) and is used for siging Json Web Tokens being issued. The newest keys are added to the beginning of the array while the oldest (compromised) ones are moved to the end of the array eventually being removed (see [`keygrip`](https://www.npmjs.com/package/keygrip)). This enables secret key rotation which adds security.
 
- * `authentication` function, which extracts user data from decrypted Json Web Token payload.
+ * `authentication` function `(payload)`, which extracts user data from decrypted Json Web Token `payload`.
+
+ * (optional) `validate_token` `async` function `(token, ctx)`, which validates Json Web Token (`ctx` has `.path`, `.query`, etc) and returns `{ valid: true / false }`.
 
 Example:
 
@@ -162,7 +169,7 @@ export default function(api)
 		const jwt_id = '...' // a randomly generated unique id of some kind
 		const payload = { role: 'admin' }
 		const token = jwt(payload, keys, user_id, jwt_id)
-		
+
 		set_cookie('authentication', token, { signed: false })
 	}
 
