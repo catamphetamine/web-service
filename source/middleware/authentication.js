@@ -158,8 +158,13 @@ export default function(options)
 	}
 }
 
-export function issue_jwt_token(payload, keys, user_id, jwt_id)
+export function issue_jwt_token({ payload, keys, user_id, jwt_id })
 {
+	if (arguments.length !== 1)
+	{
+		throw new Error("`jwt` function must take a single argument: an object { payload, keys, user_id, jwt_id }")
+	}
+	
 	if (!keys)
 	{
 		throw new Error(`JWT encryption "keys" weren't supplied`)
