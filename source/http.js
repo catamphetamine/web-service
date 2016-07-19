@@ -46,10 +46,7 @@ for (let method of Object.keys(http_methods))
 
 			if (options && options.headers)
 			{
-				for (let key of Object.keys(options.headers))
-				{
-					request.set(key, options.headers[key])
-				}
+				request.set(options.headers)
 			}
 
 			if (options && options.locale)

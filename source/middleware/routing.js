@@ -66,9 +66,8 @@ export default function(options)
 
 					for (let key of Object.keys(http_client))
 					{
-						tokenized_http_client[key] = function(destination, data, options)
+						tokenized_http_client[key] = function(destination, data, options = {})
 						{
-							options = options || {}
 							options.headers = options.headers || {}
 							options.headers.Authorization = options.headers.Authorization || jwt_header
 
