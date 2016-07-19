@@ -34,13 +34,25 @@ for (let method of Object.keys(http_methods))
 
 			if (data)
 			{
-				if (http_method === 'post')
+				switch (http_method)
 				{
-					request.send(data)
-				}
-				else
-				{
-					request.query(data)
+					case 'get':
+						request.query(data)
+						break
+
+					case 'post':
+					case 'put':
+					case 'patch':
+					case 'head':
+					case 'options':
+						request.send(data)
+						break
+
+					case 'delete':
+						throw new Error(`"data" supplied for HTTP DELETE request: ${JSON.stringify(data)}`)
+
+					default:
+						throw new Error(`Unknown HTTP method: ${http_method}`)
 				}
 			}
 
