@@ -328,9 +328,9 @@ export default function web_service(options = {})
 	result.use = web.use.bind(web)
 
 	// can proxy http requests
-	result.proxy = (from, to) =>
+	result.proxy = (from_path, to) =>
 	{
-		const { proxy, middleware } = proxier(from, to)
+		const { proxy, middleware } = proxier(from_path, to)
 		proxies.push(proxy)
 		web.use(middleware)
 	}

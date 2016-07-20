@@ -2,12 +2,12 @@ import http_proxy from 'http-proxy'
 import mount      from 'koa-mount'
 import { exists } from '../helpers'
 
-export default function(from, to)
+export default function(path, to, options = {})
 {
 	if (!exists(to))
 	{
-		to = from
-		from = undefined
+		to = path
+		path = undefined
 	}
 
 	const proxy = http_proxy.createProxyServer({})
@@ -16,11 +16,14 @@ export default function(from, to)
 	{
 		return async function(ctx)
 		{
+			const from_name = ctx.path // .substring(path.length)
+			const to_name = options.to_name || to
+
 			const promise = new Promise((resolve, reject) =>
 			{
 				ctx.res.on('close', () =>
 				{
-					reject(new Error(`Http response closed while proxying ${ctx.url} to ${to}`))
+					reject(new Error(`Http response closed while proxying "${from_name}" to ${to_name}`))
 				})
 
 				ctx.res.on('finish', () =>
@@ -39,7 +42,18 @@ export default function(from, to)
 					// error.proxy_error = true
 					// error.proxy_to = to
 
-					console.error('Proxying failed')
+					if (error.code === 'ECONNREFUSED')
+					{
+						error = new Error(`Couldn't proxy "${from_name}" to ${to_name}. No connection`)
+					}
+
+					// "Socket hang up" (probably it's caught here)
+					if (error.code === 'ECONNRESET')
+					{
+						error = new Error(`Lost connection while proxying "${from_name}" to ${to_name}`)
+					}
+
+					console.error(`Proxy error`)
 					reject(error)
 
 					// response.writeHead(502)
@@ -53,9 +67,9 @@ export default function(from, to)
 
 	const result = { proxy }
 
-	if (from)
+	if (path)
 	{
-		result.middleware = mount(from, proxy_middleware(to))
+		result.middleware = mount(path, proxy_middleware(to))
 	}
 	else
 	{
