@@ -61,18 +61,18 @@ The `utilities` object holds:
 	// Raw Json Web Token (can be used for additional HTTP requests)
 	authentication_token,
 	//
-	// Json Web Token id (can be used for expiration checks)
+	// Json Web Token id (can be used for token expiration checks)
 	authentication_token_id,
 
 	// The secret keys passed to webservice
 	keys,
 
 	// A handy HTTP client
-	// (`.get('/data', parameters)`,
-	//  `.post('/data', data)`,
+	// (`.get('/data', parameters).then(result => ...)`,
+	//  `.post('/data', data).then(result => ...)`,
 	//  etc)
 	// 
-	// When using Json Web Token authentication
+	// Also when using Json Web Token authentication
 	// this HTTP client will send requests
 	// with "Authorization" HTTP header set appropriately.
 	//
