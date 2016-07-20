@@ -124,6 +124,18 @@ const service = api
 	]
 })
 
+// // `api` array can be used with `require()` 
+// // to split a large code base into modules
+// const service = api
+// ({
+// 	api:
+// 	[
+// 		require('./api/items'),
+// 		require('./api/users'),
+// 		require('./api/utility')
+// 	]
+// })
+
 service.listen(3000)
 ```
 
@@ -152,7 +164,7 @@ To enable [Json Web Tokens](https://jwt.io/) authentication, supply two paramete
 Example:
 
 ```js
-const service = web_service
+const service = webservice
 ({
 	keys: ['secret'],
 	authentication: payload => ({ role: payload.role })
