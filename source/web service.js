@@ -128,6 +128,14 @@ export default function web_service(options = {})
 		web.use(compress())
 	}
 
+	const log = options.log ||
+	{
+		debug : console.info.bind(console),
+		info  : console.info.bind(console),
+		warn  : console.warn.bind(console),
+		error : console.error.bind(console)
+	}
+
 	// handle errors
 	web.use(error_handler({ development: options.development, log }))
 
@@ -136,14 +144,6 @@ export default function web_service(options = {})
 	if (options.access_list)
 	{
 		web.use(acl(options.access_list))
-	}
-
-	const log = options.log ||
-	{
-		debug : console.info.bind(console),
-		info  : console.info.bind(console),
-		warn  : console.warn.bind(console),
-		error : console.error.bind(console)
 	}
 
 	result.log = log
