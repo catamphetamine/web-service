@@ -128,12 +128,12 @@ const service = api
 // // to split a large code base into modules
 // const service = api
 // ({
-// 	api:
-// 	[
-// 		require('./api/items'),
-// 		require('./api/users'),
-// 		require('./api/utility')
-// 	]
+//     api:
+//     [
+//         require('./api/items'),
+//         require('./api/users'),
+//         require('./api/utility')
+//     ]
 // })
 
 service.listen(3000)
