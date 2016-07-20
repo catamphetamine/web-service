@@ -23,7 +23,7 @@ const service = web_service({ routing: true })
 
 // REST API routes
 service.get ('/items/:id', async ({ id }) => ({ color : 'black' }))
-service.post('/save/:id',  async (data)   => ({ result : true }))
+service.post('/save/:id',  async ({ id, name, description }) => ({ result : true }))
 
 service.listen(3000)
 ```
