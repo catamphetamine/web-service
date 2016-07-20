@@ -70,7 +70,7 @@ export default function({ development, log, html })
 			// show error stack trace in development mode for easier debugging
 			if (development && (!http_status_code || (http_status_code === 500 && error.message === 'Internal Server Error')))
 			{
-				const { response_status, response_body } = render_stack_trace(error)
+				const { response_status, response_body } = render_stack_trace(error, { html })
 
 				if (response_body)
 				{
@@ -85,7 +85,7 @@ export default function({ development, log, html })
 	}
 }
 
-function render_stack_trace(error)
+function render_stack_trace(error, { html })
 {
 	// supports custom `html` for an error
 	if (error.html)
