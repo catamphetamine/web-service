@@ -28,9 +28,6 @@ import routing        from './middleware/routing'
 //
 // options:
 //
-// development         - development mode flag.
-//                       is used, for example, in error handler to output stack trace as html.
-//
 // compress            - enables tar/gz compression of Http response data
 //
 // detect_locale       - extracts locale from Http Request headers 
@@ -111,6 +108,9 @@ import routing        from './middleware/routing'
 //
 export default function web_service(options = {})
 {
+	// In development mode errors are printed as HTML
+	const development = process.env.NODE_ENV !== 'production'
+
 	// this object will be returned
 	const result = {}
 
@@ -137,7 +137,7 @@ export default function web_service(options = {})
 	}
 
 	// handle errors
-	web.use(error_handler({ development: options.development, log, html: options.error_html }))
+	web.use(error_handler({ development, log, html: options.error_html }))
 
 	// If an Access Control List is set,
 	// then allow only IPs from the list of subnets

@@ -1,3 +1,8 @@
+0.1.12 / 20.07.2016
+===================
+
+  * Removed `development` option. Checking `NODE_ENV` now.
+
 0.1.8 / 20.07.2016
 ===================
 

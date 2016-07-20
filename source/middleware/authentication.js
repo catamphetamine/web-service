@@ -2,55 +2,56 @@ import jwt from 'jsonwebtoken'
 
 import errors from '../errors'
 
+// First looks for JWT token inside HTTP Authorization header,
+// then looks for `authentication` cookie.
 function get_jwt_token(context)
 {
-	let token = context.cookies.get('authentication')
-
-	if (token)
-	{
-		return { token }
-	}
-
+	// Parses "Authorization: Bearer ${token}"
 	if (context.header.authorization)
 	{
-		const parts = context.header.authorization.split(' ')
+		const match = context.header.authorization.match(/^Bearer (.+)$/i)
 
-		if (parts.length !== 2)
+		if (match)
 		{
-			return { error: 'Bad Authorization header format. Format is "Authorization: Bearer <token>"' }
+			return { token: match[1] }
 		}
 
-		const scheme      = parts[0]
-		const credentials = parts[1]
-
-		if (!/^Bearer$/i.test(scheme))
-		{
-			return { error: 'Bad Authorization header format (scheme). Format is "Authorization: Bearer <token>"' }
-		}
-
-		return { token: credentials }
+		// return { error: 'Bad Authorization header format. Format is "Authorization: Bearer <token>"' }
 	}
 
-	return { error: 'JWT token not found' }
+	// Tries the "authentication" cookie
+	if (context.cookies.get('authentication'))
+	{
+		return { token: context.cookies.get('authentication') }
+	}
+
+	// No JWT token was found
+	return { error: `JWT token not found: no "Authorization: Bearer {token}" HTTP header and no "authentication" cookie.` }
 }
 
-// takes some milliseconds to finish
-// because it validates the token via an Http request
-// to the authentication service
+// Looks for JWT token, and if it is found, sets some variables.
 async function authenticate({ authentication, keys, validate_token })
 {
+	// Get JWT token from incoming HTTP request
 	const { token, error } = get_jwt_token(this)
 
+	// Little helpers which can be called from routes to ensure
+	// a logged in user or a specific user role
 	this.authenticate = () => { throw new errors.Unauthenticated() }
 	this.role         = () => { throw new errors.Unauthenticated() }
 
+	// If no JWT token was found, then done
 	if (!token)
 	{
 		this.authentication_error = new errors.Unauthenticated(error)
 		return
 	}
 
+	// JWT token (is now accessible from Koa's `ctx`)
 	this.jwt = token
+
+	// Verify JWT token integrity
+	// by checking its signature using the supplied `keys`
 
 	let payload
 
@@ -81,34 +82,31 @@ async function authenticate({ authentication, keys, validate_token })
 		}
 	}
 
+	// If JWT token signature was unable to be verified, then exit
 	if (!payload)
 	{
 		this.authentication_error = new errors.Unauthenticated('Corrupt token')
 		return
 	}
 
+	// JWT token ID
 	const jwt_id = payload.jti
 
-	// subject
+	// `subject`
+	// (which is a user id)
 	const user_id = payload.sub
 
-	// validate token 
+	// Optional JWT token validation (by id)
 	// (for example, that it has not been revoked)
 	if (validate_token)
 	{
-		if (!this.validating_jwt_id)
-		{
-			this.validating_jwt_id = validate_token(token, this)
-		}
+		// Can validate the token via a request to a database, for example.
+		// Checks for `valid` property value inside the result object.
+		// (There can possibly be other properties such as `reason`)
+		const is_valid = (await validate_token(token, this)).valid
 
-		// takes some milliseconds to finish
-		//
-		// validates the token via an Http request
-		// to the authentication service
-		const is_valid = (await this.validating_jwt_id).valid
-
-		delete this.validating_jwt_id
-
+		// If the JWT token happens to be invalid
+		// (expired or revoked, for example), then exit.
 		if (!is_valid)
 		{
 			this.authentication_error = new errors.Unauthenticated(`Token revoked`)
@@ -116,12 +114,17 @@ async function authenticate({ authentication, keys, validate_token })
 		}
 	}
 
+	// JWT token ID is now accessible via Koa's `ctx`
 	this.jwt_id = jwt_id
 
+	// Extracts user data (description) from JWT token payload
+	// (`user` is now accessible via Koa's `ctx`)
 	this.user = authentication ? authentication(payload) : {}
+
+	// Sets user id
 	this.user.id = user_id
 	
-	// payload fields:
+	// Extra payload fields:
 	//
 	// 'iss' // Issuer
 	// 'sub' // Subject
@@ -131,10 +134,19 @@ async function authenticate({ authentication, keys, validate_token })
 	// 'iat' // Issued at 
 	// 'jti' // JWT ID
 
+	// JWT token payload is accessible via Koa's `ctx`
 	this.token_data = payload
 
+	// The user is assumed authenticated now,
+	// so `this.authenticate()` helper won't throw an exception.
+	// (and will return the `user`)
 	this.authenticate = () => this.user
 
+	// A little helper which can be called from routes
+	// as `this.role('administrator')`
+	// which will throw if the user isn't administrator
+	// (`authentication` function needs to get 
+	//  `role` from JWT payload for this to work)
 	this.role = (...roles) =>
 	{
 		for (let role of roles)
@@ -149,8 +161,10 @@ async function authenticate({ authentication, keys, validate_token })
 	}
 }
 
+// Koa middleware creator
 export default function(options)
 {
+	// Koa middleware
 	return async function(ctx, next)
 	{
 		await authenticate.call(ctx, options)
@@ -158,6 +172,7 @@ export default function(options)
 	}
 }
 
+// Generates and signs a JWT token
 export function issue_jwt_token({ payload, keys, user_id, jwt_id })
 {
 	if (arguments.length !== 1)

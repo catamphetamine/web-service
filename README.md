@@ -48,7 +48,7 @@ The `utilities` object holds:
 	destroy_cookie,
 
 	// If a Json Web Token was supplied in an HTTP request
-	// (`authentication` cookie or `Authorization` HTTP header),
+	// (`Authorization` HTTP header or `authentication` cookie),
 	// then these three properties are set.
 	//
 	// The `user` object is gonna have 
