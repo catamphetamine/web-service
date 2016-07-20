@@ -9,13 +9,5 @@
 	[
 		"transform-runtime",
 		"add-module-exports"
-	],
-
-	"env":
-	{
-		"development":
-		{
-			"plugins": []
-		}
-	}
+	]
 }
