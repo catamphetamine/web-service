@@ -47,11 +47,21 @@ The `utilities` object holds:
 	set_cookie,
 	destroy_cookie,
 
-	// Data extracted from Json Web Token (if any)
+	// If a Json Web Token was supplied in an HTTP request
+	// (`authentication` cookie or `Authorization` HTTP header),
+	// then these three properties are set.
+	//
+	// The `user` object is gonna have 
+	// a user `id` extracted from the token
+	// along with all the extra fields 
+	// extracted by `authentication` function 
+	// (see "Json Web Token" section)
 	user,
-	// Json Web Token
+	//
+	// Raw Json Web Token (can be used for additional HTTP requests)
 	authentication_token,
-	// Json Web Token id
+	//
+	// Json Web Token id (can be used for expiration checks)
 	authentication_token_id,
 
 	// The secret keys passed to webservice
