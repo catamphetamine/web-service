@@ -17,9 +17,9 @@ npm install web-service --save
 Example:
 
 ```js
-import web_service from 'web-service'
+import webservice from 'web-service'
 
-const service = web_service({ routing: true })
+const service = webservice({ routing: true })
 
 // REST API routes
 service.get ('/items/:id', async ({ id }) => ({ color : 'black' }))
