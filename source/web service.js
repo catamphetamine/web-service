@@ -137,7 +137,7 @@ export default function web_service(options = {})
 	}
 
 	// handle errors
-	web.use(error_handler({ development: options.development, log }))
+	web.use(error_handler({ development: options.development, log, html: options.error_html }))
 
 	// If an Access Control List is set,
 	// then allow only IPs from the list of subnets

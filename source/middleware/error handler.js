@@ -1,7 +1,7 @@
 import { html as html_stack_trace } from 'print-error'
 import { exists } from '../helpers'
 
-export default function({ development, log })
+export default function({ development, log, html })
 {
 	return async function(ctx, next)
 	{
@@ -131,7 +131,7 @@ function render_stack_trace(error)
 
 	try
 	{
-		return { response_body: html_stack_trace({ stack: stack_trace }, { font_size: '20pt' }) }
+		return { response_body: html_stack_trace({ stack: stack_trace }, html) }
 	}
 	catch (error)
 	{
