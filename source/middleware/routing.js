@@ -1,7 +1,7 @@
 import koa_router  from 'koa-router'
 import mount       from 'koa-mount'
 import body_parser from 'koa-bodyparser'
-import { is_object } from '../helpers'
+import { exists, is_object } from '../helpers'
 
 import http_client from '../http'
 

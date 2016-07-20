@@ -14,7 +14,7 @@ import koa_locale    from 'koa-locale'
 
 import errors      from './errors'
 import promisify   from './promisify'
-import { is_object } from './helpers'
+import { is_object, ends_with } from './helpers'
 
 import error_handler  from './middleware/error handler'
 import authentication from './middleware/authentication'
@@ -27,6 +27,9 @@ import routing        from './middleware/routing'
 // Sets up a Web Server instance (based on Koa)
 //
 // options:
+//
+// development         - development mode flag.
+//                       is used, for example, in error handler to output stack trace as html.
 //
 // compress            - enables tar/gz compression of Http response data
 //
@@ -126,7 +129,7 @@ export default function web_service(options = {})
 	}
 
 	// handle errors
-	web.use(error_handler)
+	web.use(error_handler({ development: options.development, log }))
 
 	// If an Access Control List is set,
 	// then allow only IPs from the list of subnets
@@ -139,8 +142,8 @@ export default function web_service(options = {})
 	{
 		debug : console.info.bind(console),
 		info  : console.info.bind(console),
-		warn  : console.info.bind(console),
-		error : console.info.bind(console)
+		warn  : console.warn.bind(console),
+		error : console.error.bind(console)
 	}
 
 	result.log = log
@@ -354,7 +357,7 @@ export default function web_service(options = {})
 				
 				// Reduces noise in the `log` in case of errors
 				// (browsers query '/favicon.ico' automatically)
-				if (!ctx.path.ends_with('/favicon.ico'))
+				if (!ends_with(ctx.path, '/favicon.ico'))
 				{
 					log.error(ctx.message, 'Web server error: Not found')
 				}

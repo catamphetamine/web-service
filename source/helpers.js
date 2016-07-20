@@ -64,3 +64,59 @@ export function extend(...objects)
 
 	return to
 }
+
+export function starts_with(string, substring)
+{
+	let j = substring.length
+
+	if (j > string.length)
+	{
+		return false
+	}
+
+	while (j > 0)
+	{
+		j--
+
+		if (string[j] !== substring[j])
+		{
+			return false
+		}
+	}
+
+	return true
+}
+
+export function ends_with(string, substring)
+{
+	let i = string.length
+	let j = substring.length
+
+	if (j > i)
+	{
+		return false
+	}
+
+	while (j > 0)
+	{
+		i--
+		j--
+
+		if (string[i] !== substring[j])
+		{
+			return false
+		}
+	}
+
+	return true
+}
+
+export function is_empty(array)
+{
+	return array.length === 0
+}
+
+export function not_empty(array)
+{
+	return array.length > 0
+}

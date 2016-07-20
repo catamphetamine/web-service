@@ -1,4 +1,5 @@
 import ip from 'ip'
+import { is_empty } from './helpers'
 
 export default class Access_list
 {
@@ -41,7 +42,7 @@ export default class Access_list
 
 	test(ip)
 	{
-		if (this.allowed_subnets.is_empty() && this.blocked_subnets.is_empty())
+		if (is_empty(this.allowed_subnets) && is_empty(this.blocked_subnets))
 		{
 			return true
 		}
