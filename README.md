@@ -163,8 +163,13 @@ service.upload('/upload', path.join(__dirname, '../uploads'),
 	// The returned value is gonna be sent back in HTTP response.
 	process: async function({ path })
 	{
-		const converted_file_name = await convert(path)
-		return { filename: converted_file_name }
+		const contents = await fs.readFileAsync(path, 'utf-8')
+		const stats = await analyze(contents)
+		return { stats }
+
+		// // Or maybe something like this
+		// const converted_file_name = await convert(path)
+		// return { filename: converted_file_name }
 	}
 })
 
