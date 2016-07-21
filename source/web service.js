@@ -48,8 +48,6 @@ import routing        from './middleware/routing'
 // csrf                - enables protection against Cross Site Request Forgery attacks
 //                       (pending)
 //
-// (removed) secret    - gives access to app.keys[0] when using routing feature
-//
 // returns an object with properties:
 //
 //   shut_down()   - gracefully shuts down the server (pending)
@@ -308,6 +306,9 @@ export default function web_service(options = {})
 		web.use(file_upload(settings, log))
 	}
 
+	// Shorter alias
+	result.upload = result.file_upload
+
 	// can serve static files
 	result.serve_static_files = function(url_path, filesystem_path)
 	{
@@ -317,6 +318,9 @@ export default function web_service(options = {})
 			maxAge  : 365 * 24 * 60 * 60 // 1 year
 		})))
 	}
+	
+	// Shorter alias
+	result.files = result.serve_static_files
 
 	// mounts middleware at path
 	result.mount = (path, handler) =>
@@ -391,7 +395,7 @@ export default function web_service(options = {})
 					return reject(error)
 				}
 
-				resolve()
+				resolve(http_web_server)
 			})
 			// .on('connection', () => connections++)
 			// .on('close', () => connections--)

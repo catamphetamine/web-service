@@ -11,8 +11,41 @@ import uid              from 'uid-safe'
 import promisify from '../promisify'
 import errors    from '../errors'
 
-export default function({ mount_path = '/', upload_folder, requires_authentication = false, multiple_files = false, on_file_uploaded, postprocess, file_size_limit }, log)
+export default function(...parameters)
 {
+	let mount_path
+	let upload_folder
+	let options
+	let log
+
+	// New API
+	if (typeof parameters[0] === 'string')
+	{
+		mount_path    = parameters[0]
+		upload_folder = parameters[1]
+		options       = parameters[2]
+		log           = parameters[3]
+	}
+	// Old API
+	else
+	{
+		options       = parameters[0]
+		log           = parameters[1]
+		mount_path    = options.path || options.mount_path || options.at || '/'
+		upload_folder = options.to || options.upload_folder
+	}
+
+	const
+	{
+		requires_authentication = false,
+		on_file_uploaded
+	}
+	= options
+
+	const multiple_files  = options.multiple_files || options.multiple
+	const file_size_limit = options.file_size_limit || options.limit
+	const respond         = options.postprocess || options.respond
+
 	return mount(mount_path, async function(ctx)
 	{
 		if (!ctx.is('multipart/form-data'))
@@ -83,9 +116,9 @@ export default function({ mount_path = '/', upload_folder, requires_authenticati
 			result = { file: file_names[0], parameters }
 		}
 
-		if (postprocess)
+		if (respond)
 		{
-			result = await postprocess.call(this, result)
+			result = await respond.call(this, result)
 		}
 
 		ctx.body = result

@@ -1,3 +1,8 @@
+0.1.14 / 21.07.2016
+===================
+
+  * Added short-hand aliases for `file_upload` and `serve_static_files`. Refactored `file_upload` function call parameters.
+
 0.1.12 / 20.07.2016
 ===================
 

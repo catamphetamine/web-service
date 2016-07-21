@@ -141,6 +141,26 @@ service.listen(3000)
 
 Each `api` handler is passed the same two arguments as each `routing` handler does (in Web 1.0 mode there's also the third argument which is called in case of an error being thrown from the handler, and the return value of that third argument is gonna be the redirection URL, e.g. `/error?code=${error.code}`).
 
+## Tools
+
+```js
+import webservice from 'web-service'
+
+const service = webservice()
+
+// Serve static files from a folder on disk
+service.files('/static', path.join(__dirname, '../static'))
+
+// Proxy '/proxied' path to another server
+// (make sure you don't leak the cookies to the 3rd party)
+service.proxy('/proxied', 'http://localhost:8080/api')
+
+// Handle file uploads
+service.upload('/upload', path.join(__dirname, '../uploads'))
+
+service.listen(3000)
+```
+
 ## Sessions
 
 Currently I've disabled using "sessions" in this library since I'm not using sessions anymore in my projects. Maybe I can turn them back on, if someone requests that feature (in that case create an issue).
