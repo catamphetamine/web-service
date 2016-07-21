@@ -158,19 +158,43 @@ service.proxy('/proxied', 'http://localhost:8080/api')
 // Handle file uploads
 service.upload('/upload', path.join(__dirname, '../uploads'),
 {
-	// (optional)
-	// Will process each file being uploaded.
-	// The returned value is gonna be sent back in HTTP response.
-	process: async function({ path })
-	{
-		const contents = await fs.readFileAsync(path, 'utf-8')
-		const stats = await analyze(contents)
-		return { stats }
+   // (optional)
+   // Will process each file being uploaded.
+   // The returned value is gonna be sent back in HTTP response.
+   process: async function({ path })
+   {
+      const contents = await fs.readFileAsync(path, 'utf-8')
+      const stats = await analyze(contents)
+      return { stats }
 
-		// // Or maybe something like this
-		// const converted_file_name = await convert(path)
-		// return { filename: converted_file_name }
-	}
+      // // Or maybe something like this
+      // const converted_file_name = await convert(path)
+      // return { filename: converted_file_name }
+   }
+
+   // // (optional)
+   // // Instead of first writing files to disk
+   // // and then `process`ing them,
+   // // the uploaded files may be `stream`ed directly.
+   // stream: async function(file, response)
+   // {
+   //    // To stream HTTP response manually
+   //    file.pipe(analyzer).pipe(response)
+   //    
+   //    // // Without streaming HTTP response manually
+   //    // return new Promise((resolve, reject) =>
+   //    // {
+   //    //    analyzer.on('end', result => resolve(result))
+   //    //    analyzer.on('error', reject)
+   //    //    file.pipe(analyzer)
+   //    // })
+   // },
+   //
+   // // `respond: false` tells the library that
+   // // no response data should be sent to `response`
+   // // (which means the user of the library
+   // //  chose to send HTTP response manually)
+   // respond: false
 })
 
 service.listen(3000)
