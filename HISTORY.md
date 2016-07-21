@@ -1,6 +1,11 @@
 0.1.17 / 21.07.2016
 ===================
 
+  * Added `stream(file, response)` parameter for `file_upload` which bypasses writing the uploaded files to disk. `stream` must either return a Promise (the resolved value will be later sent back in HTTP response) or stream response data directly to HTTP `response`. If `stream` is set, then `process` won't be called.
+
+0.1.17 / 21.07.2016
+===================
+
   * Added `process` parameter for `file_upload` which can process each file individually in parallel returning a result, while `postprocess` is applied at the end when all files are uploaded and `process`ed.
 
 0.1.16 / 21.07.2016
