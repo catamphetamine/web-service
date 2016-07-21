@@ -58,8 +58,6 @@ export default function(...parameters)
 			throw new errors.Unauthenticated()
 		}
 
-		const file_names = []
-
 		const form_data = await busboy(ctx.req,
 		{
 			limits:
@@ -68,17 +66,17 @@ export default function(...parameters)
 			}
 		})
 
-		// const parameters = {}
-
 		// non-channel approach, since `chan` package currently doesn't support async/await
 		const { files, fields } = form_data
 		const parameters = fields
+
+		const file_upload_promises = []
 
 		// let form_data_item
 		// while (form_data_item = yield form_data)
 		for (let form_data_item of files)
 		{
-			if (!multiple_files && file_names.not_empty())
+			if (!multiple_files && file_upload_promises.not_empty())
 			{
 				throw new Error(`Multiple files are being uploaded to a single file upload endpoint`)
 			}
@@ -89,21 +87,35 @@ export default function(...parameters)
 			// 	continue
 			// }
 
-			const file_name = await upload_file(form_data_item, { upload_folder, log })
-
-			file_names.push
-			({
-				original_file_name: form_data_item.filename,
-				uploaded_file_name: file_name
-			})
-
-			if (on_file_uploaded)
+			file_upload_promises.push(upload_file(form_data_item, { upload_folder, log }).then(async file_name =>
 			{
-				const file_size = (await promisify(fs.stat, fs)(path.join(upload_folder, file_name))).size
+				if (on_file_uploaded)
+				{
+					const file_path = path.join(upload_folder, file_name)
+					const fs_stat = promisify(fs.stat, fs)
+					const file_stats = await fs_stat(file_path)
 
-				await on_file_uploaded(form_data_item.filename, file_size, ctx.request.headers['x-forwarded-for'] || ctx.request.ip)
-			}
+					// `ctx.request.ip` trusts X-Forwarded-For HTTP Header
+					await on_file_uploaded
+					({
+						original_name : form_data_item.filename,
+						uploaded_name : file_name,
+						size          : file_stats.size,
+						ip            : ctx.request.ip
+					})
+				}
+
+				const result =
+				{
+					original_file_name: form_data_item.filename,
+					uploaded_file_name: file_name
+				}
+
+				return result
+			}))
 		}
+
+		const file_names = await Promise.all(file_upload_promises)
 
 		let result
 

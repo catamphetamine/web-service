@@ -1,3 +1,9 @@
+0.1.16 / 21.07.2016
+===================
+
+  * Parallelized file upload
+  * A little breaking change of `on_file_uploaded` function parameters: now takes an object.
+
 0.1.14 / 21.07.2016
 ===================
 
