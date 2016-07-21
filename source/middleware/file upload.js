@@ -126,17 +126,17 @@ export default function(...parameters)
 			}))
 		}
 
-		const file_names = await Promise.all(file_upload_promises)
+		const file_upload_results = await Promise.all(file_upload_promises)
 
 		let result
 
 		if (multiple_files)
 		{
-			result = { files: file_names, parameters }
+			result = { files: file_upload_results, parameters }
 		}
 		else
 		{
-			result = { file: file_names[0], parameters }
+			result = { file: file_upload_results[0], parameters }
 		}
 
 		if (respond)

@@ -156,7 +156,17 @@ service.files('/static', path.join(__dirname, '../static'))
 service.proxy('/proxied', 'http://localhost:8080/api')
 
 // Handle file uploads
-service.upload('/upload', path.join(__dirname, '../uploads'))
+service.upload('/upload', path.join(__dirname, '../uploads'),
+{
+	// (optional)
+	// Will process each file being uploaded.
+	// The returned value is gonna be sent back in HTTP response.
+	process: async function({ path })
+	{
+		const converted_file_name = await convert(path)
+		return { filename: converted_file_name }
+	}
+})
 
 service.listen(3000)
 ```
