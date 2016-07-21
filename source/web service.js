@@ -296,14 +296,14 @@ export default function web_service(options = {})
 	}
 
 	// can handle file uploads
-	result.file_upload = function(settings)
+	result.file_upload = function()
 	{
 		if (options.parse_body)
 		{
 			throw new Error(`.file_upload() was enabled but also "parse_body" wasn't set to false, therefore Http POST request bodies are parsed which creates a conflict. Set "parse_body" parameter to false.`)
 		}
 
-		web.use(file_upload(settings, log))
+		web.use(file_upload.apply(this, arguments))
 	}
 
 	// Shorter alias
@@ -318,7 +318,7 @@ export default function web_service(options = {})
 			maxAge  : 365 * 24 * 60 * 60 // 1 year
 		})))
 	}
-	
+
 	// Shorter alias
 	result.files = result.serve_static_files
 
