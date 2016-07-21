@@ -38,7 +38,8 @@ export default function(...parameters)
 	const
 	{
 		requires_authentication = false,
-		on_file_uploaded
+		on_file_uploaded,
+		process
 	}
 	= options
 
@@ -89,19 +90,29 @@ export default function(...parameters)
 
 			file_upload_promises.push(upload_file(form_data_item, { upload_folder, log }).then(async file_name =>
 			{
+				const file_path = path.join(upload_folder, file_name)
+
 				if (on_file_uploaded)
 				{
-					const file_path = path.join(upload_folder, file_name)
-					const fs_stat = promisify(fs.stat, fs)
-					const file_stats = await fs_stat(file_path)
-
 					// `ctx.request.ip` trusts X-Forwarded-For HTTP Header
-					await on_file_uploaded
+					on_file_uploaded
 					({
-						original_name : form_data_item.filename,
-						uploaded_name : file_name,
-						size          : file_stats.size,
-						ip            : ctx.request.ip
+						original_file_name : form_data_item.filename,
+						uploaded_file_name : file_name,
+						path               : file_path,
+						ip                 : ctx.request.ip
+					})
+				}
+
+				if (process)
+				{
+					// `ctx.request.ip` trusts X-Forwarded-For HTTP Header
+					return await process
+					({
+						original_file_name : form_data_item.filename,
+						uploaded_file_name : file_name,
+						path               : file_path,
+						ip                 : ctx.request.ip
 					})
 				}
 

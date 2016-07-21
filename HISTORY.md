@@ -1,3 +1,8 @@
+0.1.17 / 21.07.2016
+===================
+
+  * Added `process` parameter for `file_upload` which can process each file individually in parallel returning a result, while `postprocess` is applied at the end when all files are uploaded and `process`ed.
+
 0.1.16 / 21.07.2016
 ===================
 
