@@ -1,10 +1,17 @@
 import http_proxy from 'http-proxy'
 import mount      from 'koa-mount'
-import { exists } from '../helpers'
+import { exists, is_object } from '../helpers'
 
 export default function(path, to, options = {})
 {
 	// Normalize arguments
+	
+	if (is_object(to))
+	{
+		options = to
+		to = undefined
+	}
+
 	if (!exists(to))
 	{
 		to = path
@@ -12,7 +19,7 @@ export default function(path, to, options = {})
 	}
 
 	// Create proxy server
-	const proxy = http_proxy.createProxyServer({})
+	const proxy = http_proxy.createProxyServer(options)
 
 	// Koa middleware
 	function proxy_middleware(to)

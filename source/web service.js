@@ -334,9 +334,9 @@ export default function web_service(options = {})
 	// Proxies all URLs starting with 'from_path' to another server
 	// (make sure you proxy only to your own servers
 	//  so that you don't leak cookies or JWT tokens to the 3rd party)
-	result.proxy = (from_path, to) =>
+	result.proxy = (from_path, to, proxy_options) =>
 	{
-		const { proxy, middleware } = proxier(from_path, to)
+		const { proxy, middleware } = proxier(from_path, to, proxy_options)
 		proxies.push(proxy)
 		web.use(middleware)
 	}

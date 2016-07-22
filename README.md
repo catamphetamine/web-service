@@ -158,7 +158,11 @@ service.files('/static', path.join(__dirname, '../static'))
 
 // Proxy '/proxied' path to another server
 // (make sure you proxy only to your own servers
-//  so that you don't leak JWT token to a third party)
+//  so that you don't leak JWT token to a third party).
+//
+// Additional options may be passed as a third parameter.
+// https://github.com/nodejitsu/node-http-proxy#options
+//
 service.proxy('/proxied', 'http://localhost:8080/api')
 
 // Handle file uploads

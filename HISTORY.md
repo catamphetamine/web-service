@@ -1,3 +1,8 @@
+0.1.20 / 22.07.2016
+===================
+
+  * Added `options` argument to `proxy` function. See [`http-proxy` options](https://github.com/nodejitsu/node-http-proxy#options).
+
 0.1.19 / 21.07.2016
 ===================
 
