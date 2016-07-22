@@ -1,37 +1,42 @@
 import koa_router  from 'koa-router'
 import mount       from 'koa-mount'
 import body_parser from 'koa-bodyparser'
-import { exists, is_object } from '../helpers'
+import { exists, is_object, starts_with } from '../helpers'
 
-import http_client from '../http'
+// `http` utility
+import http from '../http'
 
 export default function(options)
 {
 	const router = new koa_router()
 
+	// These extesion methods will be added
+	// to the webservice object later (not in this function)
 	const extensions = {}
 
-	// supports routing
-	//
-	// usage: web.get('/path', parameters => 'Echo')
+	// Define handlers for HTTP requests for these HTTP methods
 	for (let method of ['get', 'put', 'patch', 'post', 'delete'])
 	{
 		extensions[method] = function(path, action)
 		{
-			// all errors thrown from this middleware will get caught 
-			// by the error-catching middleware above
+			// All errors thrown from this middleware will get caught 
+			// by the error-catching middleware up the middleware chain
 			router[method](path, function(ctx, next)
 			{
+				// Sessions aren't currently used
 				const session = ctx.session
 				const session_id = ctx.sessionId
 				const destroy_session = () => ctx.session = null
 
+				// Cookie helpers
+
 				const get_cookie = name => ctx.cookies.get(name)
-				
+
 				const set_cookie = (name, value, options = {}) =>
 				{
+					// Set the cookie to expire in January 2038 (the fartherst it can get)
 					// http://stackoverflow.com/questions/3290424/set-a-cookie-to-never-expire
-					options.expires = options.expires || new Date(2147483647000)  // January 2038
+					options.expires = options.expires || new Date(2147483647000)
 
 					ctx.cookies.set(name, value, options)
 				}
@@ -42,10 +47,11 @@ export default function(options)
 					ctx.cookies.set(name + '.sig', null)
 				}
 
-				// api call parameters
+				// This route handler parameters,
+				// which are extracted from POST body, GET query, and route parameters.
 				const parameters = { ...ctx.request.body, ...ctx.query, ...ctx.params }
 
-				// treat empty strings as `undefined`s
+				// Treat empty string parameters as `undefined`s
 				for (let key of Object.keys(parameters))
 				{
 					if (parameters[key] === '')
@@ -54,53 +60,70 @@ export default function(options)
 					}
 				}
 
-				// add JWT header to http client requests
-				
-				let tokenized_http_client = http_client
+				// By default, use the standard `http` utility
+				let http_client = http
 
+				// If Json Web Tokens are used for authentication,
+				// then add JWT Authorization header to internal HTTP requests.
 				if (ctx.jwt)
 				{
-					tokenized_http_client = {}
+					// Customize all methods of `http` utility
+					http_client = {}
 
+					// HTTP Authorization header value for a JWT token
 					const jwt_header = `Bearer ${ctx.jwt}`
 
-					for (let key of Object.keys(http_client))
+					// For each HTTP method
+					for (let key of Object.keys(http))
 					{
-						tokenized_http_client[key] = function(destination, data, options = {})
+						// Add JWT Header to an internal HTTP request
+						http_client[key] = function(destination, data, options = {})
 						{
+							// Send JWT token in `Authorization` HTTP header
 							options.headers = options.headers || {}
 							options.headers.Authorization = options.headers.Authorization || jwt_header
 
-							return http_client[key](destination, data, options)
+							// Perform HTTP request
+							return http[key](destination, data, options)
 						}
 					}
 				}
 
-				// call the api method action
+				// Сall the route handler with `parameters` and a utility object
 				const result = action.bind(ctx)(parameters,
 				{
+					// Client's IP address.
+					// Trusts 'X-Forwarded-For' HTTP header.
 					ip: ctx.ip,
 					
+					// Cookie utilities
 					get_cookie,
 					set_cookie,
 					destroy_cookie,
 
+					// Sessions aren't used currently
 					session,
 					session_id,
 					destroy_session,
 
+					// JWT stuff
 					user                    : ctx.user,
 					authentication_error    : ctx.authentication_error,
 					authentication_token_id : ctx.jwt_id,
 					authentication_token    : ctx.jwt,
 
+					// Applicaton's secret signing keys
 					keys : options.keys,
 
-					http : tokenized_http_client
+					// internal `http` utility
+					// (only use it for internal HTTP requests,
+					//  because it will send cookies and JWT tokens too)
+					internal_http : http_client
 				})
 
-				// http://habrahabr.ru/company/yandex/blog/265569/
+				// Return some special 200 statuses for some special HTTP methods
 				// http://goinbigdata.com/how-to-design-practical-restful-api/
+				// http://habrahabr.ru/company/yandex/blog/265569/
 				switch (method)
 				{
 					case 'put':
@@ -110,43 +133,28 @@ export default function(options)
 						ctx.status = 204 // No Content - Resource deleted and body is empty
 				}
 
-				function postprocess(result)
-				{
-					if (!exists(result))
-					{
-						return {}
-					}
-
-					if (!is_object(result) && !Array.isArray(result))
-					{
-						return { result }
-					}
-
-					return result
-				}
-
-				function is_redirect(result)
-				{
-					return is_object(result) && result.redirect && Object.keys(result).length === 1
-				}
-
+				// Responds to this HTTP request
+				// with a route handler result
 				const respond = result =>
 				{
+					// If it's a redirect, then do the redirect
 					if (is_redirect(result))
 					{
 						return ctx.redirect(result.redirect)
 					}
 
-					ctx.body = postprocess(result)
+					// Send result JSON object as HTTP response body
+					ctx.body = response(result)
 				}
 
+				// If route handler result is a Promise,
+				// then wait for it to finish, and then respond.
+				// Otherwise respond immediately.
 				if (result instanceof Promise)
 				{
-					return result.then
-					(
-						respond,
-						error => { throw error }
-					)
+					// All errors thrown here will be caught
+					// by the error-catching middleware up the middleware chain
+					return result.then(respond, error => { throw error })
 				}
 				else
 				{
@@ -156,6 +164,21 @@ export default function(options)
 		}
 	}
 
+	// Routing requires parsing HTTP POST requests body
+	// to be able to parse HTTP POST parameters
+	// and pass them in `parameters` to HTTP POST route handlers.
+	//
+	// So if routing is enabled for all paths,
+	// then HTTP POST request body parsing
+	// should also be enabled globally.
+	//
+	// This is not a strict requirement
+	// because one may simply opt out of using POST handlers
+	// while still using GET handlers, for example.
+	//
+	// But still it's a useful simple check
+	// to make sure a developer didn't mess up the settings.
+	//
 	if (typeof options.routing !== 'string')
 	{
 		if (!options.parse_body)
@@ -190,4 +213,28 @@ export default function(options)
 
 		return result
 	}
+}
+
+// Creates HTTP response JSON object
+// out of a route handler result
+function response(result)
+{
+	if (!exists(result))
+	{
+		return {}
+	}
+
+	if (!is_object(result) && !Array.isArray(result))
+	{
+		return { result }
+	}
+
+	return result
+}
+
+// Checks if a route handler requests a redirect to a URL
+// (then `result` must have a form of `{ redirect: "/url" }`)
+function is_redirect(result)
+{
+	return is_object(result) && result.redirect && Object.keys(result).length === 1
 }

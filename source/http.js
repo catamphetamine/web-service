@@ -1,40 +1,36 @@
 import superagent from 'superagent'
 import { is_object } from './helpers'
 
-const http_methods =
-{
-	get    : 'get',
-	post   : 'post',
-	call   : 'post',
-	create : 'post',
-	put    : 'put',
-	update : 'put',
-	patch  : 'patch',
-	delete : 'del'
-}
+// HTTP request methods
+const methods =
+[
+	'get',
+	'post',
+	'put',
+	'patch',
+	'delete',
+	'head',
+	'options'
+]
 
 const http_client = {}
 
-for (let method of Object.keys(http_methods))
+// Define HTTP methods on `http_client` object
+for (let method of methods)
 {
-	http_client[method] = (destination, data, options) =>
+	http_client[method] = (destination, data, options = {}) =>
 	{
-		const http_method = http_methods[method]
-
-		if (!http_method)
-		{
-			throw new Error(`Api method not found: ${method}`)
-		}
-
 		const url = format_url(destination)
 
 		return new Promise((resolve, reject) =>
 		{
-			const request = superagent[http_method](url)
+			// Create Http request
+			const request = superagent[method](url)
 
+			// Attach data to the outgoing HTTP request
 			if (data)
 			{
-				switch (http_method)
+				switch (method)
 				{
 					case 'get':
 						request.query(data)
@@ -52,27 +48,28 @@ for (let method of Object.keys(http_methods))
 						throw new Error(`"data" supplied for HTTP DELETE request: ${JSON.stringify(data)}`)
 
 					default:
-						throw new Error(`Unknown HTTP method: ${http_method}`)
+						throw new Error(`Unknown HTTP method: ${method}`)
 				}
 			}
 
-			if (options && options.headers)
+			// Apply this HTTP request specific HTTP headers
+			if (options.headers)
 			{
 				request.set(options.headers)
 			}
 
-			if (options && options.locale)
-			{
-				request.set('accept-language', locale)
-			}
-
+			// Send HTTP request
 			request.end((error, response) => 
 			{
+				// If HTTP response was received,
+				// and if that HTTP response is a JSON object,
+				// then the error is the `error` property of that object.
 				if (!error && response)
 				{
 					error = response.error
 				}
 
+				// If the HTTP request failed, or returned an `error` property
 				if (error)
 				{
 					// superagent would have already output the error to console
@@ -80,6 +77,7 @@ for (let method of Object.keys(http_methods))
 					
 					console.log('[http client] (http request error)')
 
+					// If the 
 					if (response)
 					{
 						error.code = response.status
@@ -118,46 +116,3 @@ function format_url(destination)
 }
 
 export default http_client
-
-// import http        from 'http'
-// import querystring from 'querystring'
-
-// Promise.promisifyAll(http)
-
-// export function get(options)
-// {
-// 	return new Promise((resolve, reject) =>
-// 	{
-// 		const http_request = http.request
-// 		({
-// 			host: configuration.authentication_service.http.host,
-// 			port: configuration.authentication_service.http.port,
-// 			path: options.parameters ? `${options.path}?${querystring.stringify(options.parameters)}` : options.path
-// 		},
-// 		response =>
-// 		{
-// 			let response_data = ''
-
-// 			response.setEncoding('utf8')
-
-// 			if ()
-
-// 			response.on('data', chunk =>
-// 			{
-// 				response_data += chunk
-// 			})
-
-// 			response.on('end', () =>
-// 			{
-// 				resolve(response)
-// 			})
-// 		})
-
-// 		http_request.on('error', error => reject(error))
-
-// 		// // write data to request body
-// 		// http_request.write(postData)
-
-// 		http_request.end()
-// 	})
-// }

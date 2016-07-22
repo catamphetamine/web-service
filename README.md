@@ -67,16 +67,21 @@ The `utilities` object holds:
 	// The secret keys passed to webservice
 	keys,
 
-	// A handy HTTP client
+	// A handy HTTP client for making "internal" HTTP requests
 	// (`.get('/data', parameters).then(result => ...)`,
 	//  `.post('/data', data).then(result => ...)`,
 	//  etc)
 	// 
-	// Also when using Json Web Token authentication
-	// this HTTP client will send requests
+	// If Json Web Token authentication is enabled
+	// then this "internal" HTTP client utility will send HTTP requests
 	// with "Authorization" HTTP header set appropriately.
 	//
-	http
+	// Therefore this `internal_http` utility should only be used
+	// for sending HTTP requests to your own servers
+	// (hence the word "internal")
+	// to prevent leaking JWT token to a third party.
+	//
+	internal_http
 }
 ```
 
@@ -152,7 +157,8 @@ const service = webservice()
 service.files('/static', path.join(__dirname, '../static'))
 
 // Proxy '/proxied' path to another server
-// (make sure you don't leak the cookies to the 3rd party)
+// (make sure you proxy only to your own servers
+//  so that you don't leak JWT token to a third party)
 service.proxy('/proxied', 'http://localhost:8080/api')
 
 // Handle file uploads

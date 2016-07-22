@@ -331,7 +331,9 @@ export default function web_service(options = {})
 	// exposes Koa .use() function for custom middleware
 	result.use = web.use.bind(web)
 
-	// can proxy http requests
+	// Proxies all URLs starting with 'from_path' to another server
+	// (make sure you proxy only to your own servers
+	//  so that you don't leak cookies or JWT tokens to the 3rd party)
 	result.proxy = (from_path, to) =>
 	{
 		const { proxy, middleware } = proxier(from_path, to)

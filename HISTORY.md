@@ -1,3 +1,8 @@
+0.1.19 / 21.07.2016
+===================
+
+  * Renamed `http` utility (which is passed inside `parameters` object of route handlers) to `internal_http`, emphasizing the fact that it should only be used to send HTTP requests to your own servers because it will also send JWT token header and therefore it would expose that sensitive information to a third party if used for external HTTP requests.
+
 0.1.17 / 21.07.2016
 ===================
 

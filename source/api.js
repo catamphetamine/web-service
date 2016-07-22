@@ -21,19 +21,22 @@ export default function(options = {})
 
 	for (let method of ['get', 'put', 'patch', 'post', 'delete'])
 	{
+		// Web 2.0 Api (Ajax)
 		api[method] = web[method]
 
+		// Web 1.0 Api (no Ajax)
 		api.legacy[method] = function(route, handler, error_handler)
 		{
 			web[method](route, async function(parameters)
 			{
 				try
 				{
+					// The handler returns a URL to which the user will be redirected
 					return { redirect: await handler.apply(this, arguments) }
 				}
 				catch (error)
 				{
-					// log the error, if it's not a normal Api error
+					// Log the error, if it's not a normal Api error
 					// (prevents log pollution with things like 
 					//  `404 User not found` or `401 Not authenticated`)
 					if (!exists(error.code))
@@ -41,8 +44,12 @@ export default function(options = {})
 						log.error(error, 'Api service error')
 					}
 
+					// Call the `error_handler` to get a URL
+					// to which the user will be redirected
 					const url = error_handler.call(this, error)
 
+					// Add error info to the URL
+					// to which the user is going to be redirected
 					const redirect = new Url(url).set_parameters
 					({
 						...parameters, 
@@ -51,6 +58,7 @@ export default function(options = {})
 					})
 					.print()
 
+					// Perform the redirect
 					return { redirect }
 				}
 			})
