@@ -109,16 +109,18 @@ export default function web_service(options = {})
 	// In development mode errors are printed as HTML
 	const development = process.env.NODE_ENV !== 'production'
 
-	// this object will be returned
+	// This object will be returned
 	const result = {}
 
-	// instantiate a Koa web application
+	// Create a Koa web application
 	const web = new koa()
 
 	// Trust `X-Forwarded-For` HTTP header
 	// https://en.wikipedia.org/wiki/X-Forwarded-For
 	web.proxy = true
 
+	// Compresses HTTP response with GZIP
+	// (better delegate this task to NginX or HAProxy in production)
 	if (options.compress)
 	{
 		// хз, нужно ли сжатие в node.js: мб лучше поставить впереди nginx'ы, 
@@ -126,6 +128,7 @@ export default function web_service(options = {})
 		web.use(compress())
 	}
 
+	// Dummy log in case no `log` supplied
 	const log = options.log ||
 	{
 		debug : console.info.bind(console),
@@ -134,18 +137,19 @@ export default function web_service(options = {})
 		error : console.error.bind(console)
 	}
 
-	// handle errors
+	// Handle all subsequent errors
 	web.use(error_handler({ development, log, html: options.error_html }))
 
 	// If an Access Control List is set,
-	// then allow only IPs from the list of subnets
+	// then allow only IPs from the list of subnets.
+	// (this is a "poor man"'s ACL, better use a real firewall)
 	if (options.access_list)
 	{
 		web.use(acl(options.access_list))
 	}
 
-	result.log = log
-
+	// Outputs Apache-style logs for incoming HTTP requests.
+	// E.g. "GET /users?page=2 200 466ms 4.66kb"
 	if (options.debug)
 	{
 		web.use(koa_logger(log,
@@ -161,20 +165,22 @@ export default function web_service(options = {})
 
 	if (options.detect_locale)
 	{
-		// get locale from Http request
-		// (the second parameter is the Http Get parameter name)
+		// Gets locale from HTTP request
+		// (the second parameter is the HTTP GET query parameter name
+		//  and also the cookie name)
 		koa_locale(web, 'locale')
 
-		// usage:
-		//
-		// .use(async function(ctx)
-		// {
-		// 	const preferred_locale = ctx.getLocaleFromQuery() || ctx.getLocaleFromCookie() || ctx.getLocaleFromHeader() || 'en'
-		// })
+		// Sets `ctx.locale` variable for reference
+		web.use(async function(ctx)
+		{
+			ctx.locale = ctx.getLocaleFromQuery() || ctx.getLocaleFromCookie() || ctx.getLocaleFromHeader()
+		})
 	}
 
+	// Secret keys (used for JWT token signing, for example)
 	web.keys = options.keys
 
+	// Enable JWT authentication
 	if (options.authentication)
 	{
 		web.use(authentication
@@ -185,16 +191,20 @@ export default function web_service(options = {})
 		}))
 	}
 
+	// Sessions aren't currently used
 	if (options.session)
 	{
 		web.use(session(options.redis))
 	}
 
+	// Checks if `parse_body` needs to be set to `true`
+	// (that's the case for routing)
 	if (options.parse_body !== false && options.routing === true)
 	{
 		options.parse_body = true
 	}
 
+	// Enables HTTP POST body parsing
 	if (options.parse_body)
 	{
 		// Set up http post request handling.
@@ -225,6 +235,7 @@ export default function web_service(options = {})
 		// })
 	}
 
+	// Enables REST routing
 	if (options.routing)
 	{
 		const { extensions, middleware } = routing
@@ -234,6 +245,7 @@ export default function web_service(options = {})
 			parse_body : options.parse_body
 		})
 
+		// Injects REST routing methods to `result` object.
 		for (let key of Object.keys(extensions))
 		{
 			result[key] = extensions[key]
@@ -245,13 +257,14 @@ export default function web_service(options = {})
 		}
 	}
 
-	// active Http proxy servers
+	// Active HTTP proxy servers
 	const proxies = []
 
-	// server shutting down flag
+	// HTTP server shutdown flag
 	let shut_down = false
 
-	// in case of maintenance
+	// In case of server shutdown, stop accepting new HTTP connections.
+	// (this code wasn't tested)
 	web.use(async function (ctx, next)
 	{
 		if (shut_down)
@@ -265,14 +278,17 @@ export default function web_service(options = {})
 		}
 	})
 
+	// Shuts down the HTTP server.
+	// Returns a Promise.
+	// (this method wasn't tested)
 	result.shut_down = function()
 	{
 		shut_down = true
 
-		// pending promises
+		// Pending promises
 		const pending = []
 
-		// shut down http proxy
+		// Shut down http proxies
 		for (let proxy of proxies)
 		{
 			pending.push(promisify(proxy.close, proxy)())
@@ -289,40 +305,45 @@ export default function web_service(options = {})
 		return Promise.all(pending)
 	}
 
+	// Returns the number of currently present HTTP connections.
+	// (this method wasn't tested)
 	result.connections = function()
 	{
 		// http_server.getConnections()
 		return promisify(web.getConnections, web)()
 	}
 
-	// can handle file uploads
+	// Enables handling file uploads.
+	// Takes an object with parameters.
 	result.file_upload = function()
 	{
+		// Check for misconfiguration
 		if (options.parse_body)
 		{
 			throw new Error(`.file_upload() was enabled but also "parse_body" wasn't set to false, therefore Http POST request bodies are parsed which creates a conflict. Set "parse_body" parameter to false.`)
 		}
 
+		// Enable file uploading middleware
 		web.use(file_upload.apply(this, arguments))
 	}
 
-	// Shorter alias
+	// Shorter alias for file uploads
 	result.upload = result.file_upload
 
-	// can serve static files
-	result.serve_static_files = function(url_path, filesystem_path)
+	// Serves static files
+	// (better do it with NginX or HAProxy in production)
+	result.serve_static_files = function(url_path, filesystem_path, options = {})
 	{
+		// Cache them in the web browser for 1 year by default
+		const maxAge = options.maxAge || 365 * 24 * 60 * 60
 		// https://github.com/koajs/static
-		web.use(mount(url_path, statics(filesystem_path,
-		{
-			maxAge  : 365 * 24 * 60 * 60 // 1 year
-		})))
+		web.use(mount(url_path, statics(filesystem_path, { maxAge })))
 	}
 
-	// Shorter alias
+	// Shorter alias for static files serving
 	result.files = result.serve_static_files
 
-	// mounts middleware at path
+	// Mounts Koa middleware at path
 	result.mount = (path, handler) =>
 	{
 		web.use(mount(path, handler))
@@ -341,7 +362,8 @@ export default function web_service(options = {})
 		web.use(middleware)
 	}
 
-	// runs http server
+	// Runs http server.
+	// Returns a Promise resolving to an instance of HTTP server.
 	result.listen = (port, host) =>
 	{
 		if (is_object(port))
@@ -354,28 +376,27 @@ export default function web_service(options = {})
 
 		return new Promise((resolve, reject) =>
 		{
-			// the last route - throws not found error
+			// The last route - throws "Not found" error
 			web.use(async function(ctx)
 			{
-				// throw new Method_not_found()
 				ctx.status = 404
 				ctx.message = `The requested resource not found: ${ctx.method} ${ctx.url}`
 				
 				// Reduces noise in the `log` in case of errors
-				// (browsers query '/favicon.ico' automatically)
+				// (web browsers query '/favicon.ico' automatically)
 				if (!ends_with(ctx.path, '/favicon.ico'))
 				{
 					log.error(ctx.message, 'Web server error: Not found')
 				}
 			})
 
-			// http server
+			// Create HTTP server
 			const http_web_server = http.createServer()
 
-			// // enable Koa for handling http requests
+			// // Enable Koa for handling HTTP requests
 			// http_web_server.on('request', web.callback())
 
-			// copy-pasted from 
+			// Copy-pasted from 
 			// https://github.com/koajs/koala/blob/master/lib/app.js
 			//
 			// "Expect: 100-continue" is something related to http request body parsing
@@ -385,11 +406,12 @@ export default function web_service(options = {})
 			http_web_server.on('request', koa_callback)
 			http_web_server.on('checkContinue', function(request, response)
 			{
-				// requests with `Expect: 100-continue`
+				// Requests with `Expect: 100-continue`
 				request.checkContinue = true
 				koa_callback(request, response)
 			})
 
+			// Starts HTTP server
 			http_web_server.listen(port, host, error =>
 			{
 				if (error)
