@@ -28,7 +28,7 @@ export default function(path, to, options = {})
 		{
 			// These two variables are used for generating error messages
 			const from_name = ctx.path // .substring(path.length)
-			const to_name = options.to_name || to
+			const to_name = options.name || to
 
 			const promise = new Promise((resolve, reject) =>
 			{
