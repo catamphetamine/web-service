@@ -1,3 +1,8 @@
+0.1.23 / 27.07.2016
+===================
+
+  * Fixed returning `Promise`s in routes resolving to strange objects of form `{ _c: [], _s: 0, _d: false, _h: 0, _n: false }`
+
 0.1.22 / 23.07.2016
 ===================
 

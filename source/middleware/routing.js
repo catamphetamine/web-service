@@ -150,7 +150,7 @@ export default function(options)
 				// If route handler result is a Promise,
 				// then wait for it to finish, and then respond.
 				// Otherwise respond immediately.
-				if (result instanceof Promise)
+				if (result && typeof result.then === 'function')
 				{
 					// All errors thrown here will be caught
 					// by the error-catching middleware up the middleware chain
