@@ -127,10 +127,12 @@ export default function(options)
 				switch (method)
 				{
 					case 'put':
-						ctx.status = 204 // No Content - Resource was updated and body is empty
-
 					case 'delete':
-						ctx.status = 204 // No Content - Resource deleted and body is empty
+						if (exists(result))
+						{
+							throw new Error(`PUT and DELETE HTTP queries must not return any content`)
+						}
+						break
 				}
 
 				// Responds to this HTTP request
@@ -141,6 +143,12 @@ export default function(options)
 					if (is_redirect(result))
 					{
 						return ctx.redirect(result.redirect)
+					}
+
+					if (!exists(result))
+					{
+						ctx.status = 204 // No Content
+						return
 					}
 
 					// Send result JSON object as HTTP response body

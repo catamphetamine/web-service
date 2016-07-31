@@ -1,3 +1,9 @@
+0.1.24 / 31.07.2016
+===================
+
+  * Placed a restriction on `PUT` and `DELETE` HTTP queries to not return any content
+  * Added `date_parser` to `http` utility
+
 0.1.23 / 27.07.2016
 ===================
 
