@@ -227,11 +227,6 @@ export default function(options)
 // out of a route handler result
 function response(result)
 {
-	if (!exists(result))
-	{
-		return {}
-	}
-
 	if (!is_object(result) && !Array.isArray(result))
 	{
 		return { result }
