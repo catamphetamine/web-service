@@ -1,6 +1,9 @@
+import util from 'util'
+
 import koa_router  from 'koa-router'
 import mount       from 'koa-mount'
 import body_parser from 'koa-bodyparser'
+
 import { exists, is_object, starts_with } from '../helpers'
 
 // `http` utility
@@ -121,24 +124,24 @@ export default function(options)
 					internal_http : http_client
 				})
 
-				// Return some special 200 statuses for some special HTTP methods
-				// http://goinbigdata.com/how-to-design-practical-restful-api/
-				// http://habrahabr.ru/company/yandex/blog/265569/
-				switch (method)
-				{
-					case 'put':
-					case 'delete':
-						if (exists(result))
-						{
-							throw new Error(`PUT and DELETE HTTP queries must not return any content`)
-						}
-						break
-				}
-
 				// Responds to this HTTP request
 				// with a route handler result
 				const respond = result =>
 				{
+					// Return some special 200 statuses for some special HTTP methods
+					// http://goinbigdata.com/how-to-design-practical-restful-api/
+					// http://habrahabr.ru/company/yandex/blog/265569/
+					switch (method)
+					{
+						case 'put':
+						case 'delete':
+							if (exists(result))
+							{
+								throw new Error(`PUT and DELETE HTTP queries must not return any content.\nRequested ${method.toUpperCase()} ${ctx.originalUrl} and got:\n${util.inspect(result)}`)
+							}
+							break
+					}
+					
 					// If it's a redirect, then do the redirect
 					if (is_redirect(result))
 					{

@@ -1,3 +1,8 @@
+0.1.25 / 07.08.2016
+===================
+
+  * Fixed a bug of `PUT and DELETE HTTP queries must not return any content` error being thrown when a Promise is returned from a route handler
+
 0.1.24 / 31.07.2016
 ===================
 
