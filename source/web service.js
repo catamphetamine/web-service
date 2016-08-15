@@ -137,6 +137,9 @@ export default function web_service(options = {})
 		error : console.error.bind(console)
 	}
 
+	// Is used in `api.js`
+	web.log = log
+
 	// Handle all subsequent errors
 	web.use(error_handler({ development, log, html: options.error_html }))
 
