@@ -41,7 +41,7 @@ export default function(options = {})
 					//  `404 User not found` or `401 Not authenticated`)
 					if (!exists(error.code))
 					{
-						log.error(error, 'Api service error')
+						log.error(error)
 					}
 
 					// Call the `error_handler` to get a URL
