@@ -23,6 +23,8 @@ import file_upload    from './middleware/file upload'
 import acl            from './middleware/acl'
 import session        from './middleware/session'
 import routing        from './middleware/routing'
+import redirect       from './middleware/redirect'
+import rewrite        from './middleware/rewrite'
 
 // Sets up a Web Server instance (based on Koa)
 //
@@ -101,10 +103,36 @@ import routing        from './middleware/routing'
 //
 //     parameters:
 //
-//       from       - the URL path from which to redirect
-//       to         - the URL (or path) to which the redirect will be performed
-//       status     - HTTP redirection status (defaults to 301 (Moved Permanently))
+//       from       - the base URL path from which to redirect
+//
+//       options:
+//
+//         to       - the base URL (or path) to which the redirect will be performed
+//
+//         exact    - redirect to `to` only in case of exact URL path match (`url.path === from`)
+//
+//         match    - custom URL matching function match({ url, path, querystring, query });
+//                    should return a URL (or a path) to which the redirect will be performed;
+//                    if it returns nothing then the redirect won't be performed.
+//
+//         status   - HTTP redirection status (defaults to 301 (Moved Permanently))
 //                    (e.g. can be set to 302 (Moved Temporarily))
+//
+//   rewrite()          - Rewrites HTTP request URL (for further matching)
+//
+//     parameters:
+//
+//       from       - the base URL path on which to rewrite
+//
+//       options:
+//
+//         to       - the base URL (or path) to which to rewrite the HTTP request URL
+//
+//         exact    - rewrite to `to` only in case of exact URL path match (`url.path === from`)
+//
+//         match    - custom URL matching function match({ url, path, querystring, query });
+//                    should return a URL (or a path) to which to rewrite the HTTP request URL;
+//                    if it returns nothing then the URL won't be rewritten.
 //
 //   proxy()             - proxies all requests for this path to another web server
 //
@@ -375,13 +403,15 @@ export default function web_service(options = {})
 	}
 
 	// Redirection helper
-	result.redirect = (from, to, status = 301) =>
+	result.redirect = (from, options) =>
 	{
-		web.use(mount(from, async function(ctx)
-		{
-			ctx.status = status
-			ctx.redirect(to)
-		}))
+		web.use(redirect(from, options))
+	}
+
+	// URL rewrite
+	result.rewrite = (from, options) =>
+	{
+		web.use(rewrite(from, options))
 	}
 
 	// Runs http server.

@@ -1,4 +1,4 @@
-import { is_object, exists, extend } from './helpers'
+import { is_object, starts_with, exists, extend } from './helpers'
 
 // parseUri 1.2.2
 // (c) Steven Levithan <stevenlevithan.com>
@@ -149,6 +149,18 @@ export default class Uri
 	remove_parameter(parameter)
 	{
 		delete this.parameters[parameter]
+
+		return this
+	}
+
+	path(path)
+	{
+		if (!starts_with(path, '/'))
+		{
+			path = '/' + path
+		}
+		
+		this.path = path
 
 		return this
 	}

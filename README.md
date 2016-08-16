@@ -154,7 +154,7 @@ import webservice from 'web-service'
 const service = webservice()
 
 // Performs an HTTP redirect (301 Moved Permanently)
-service.redirect('/favicon.ico', '/assets/icon.png')
+service.redirect('/old', { to: '/new' })
 
 // Serve static files from a folder on disk
 service.files('/static', path.join(__dirname, '../static'))

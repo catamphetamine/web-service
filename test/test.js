@@ -38,8 +38,8 @@ describe(`web service`, function()
 
 		web.proxy('/proxied', 'http://google.ru')
 
-		web.redirect('/redirected', 'http://google.ru')
-		web.redirect('/redirected', 'http://google.ru', 302)
+		web.redirect('/redirected', { to: 'http://google.ru' })
+		web.rewrite('/rewritten', { to: '/rewrote' })
 
 		// setTimeout(() => web.shut_down(), 1000)
 
