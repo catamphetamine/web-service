@@ -97,6 +97,15 @@ import routing        from './middleware/routing'
 //
 //   use()               - standard Koa .use() method
 //
+//   redirect()          - HTTP redirect helper
+//
+//     parameters:
+//
+//       from       - the URL path from which to redirect
+//       to         - the URL path to which the redirect will be performed
+//       status     - HTTP redirection status (defaults to 301 (Moved Permanently))
+//                    (e.g. can be set to 302 (Moved Temporarily))
+//
 //   proxy()             - proxies all requests for this path to another web server
 //
 //     parameters:
@@ -363,6 +372,16 @@ export default function web_service(options = {})
 		const { proxy, middleware } = proxier(from_path, to, proxy_options)
 		proxies.push(proxy)
 		web.use(middleware)
+	}
+
+	// Redirection helper
+	result.redirect = (from, to, status = 301)
+	{
+		web.use(mount(from, async function(ctx)
+		{
+			ctx.status = status
+			ctx.redirect(to)
+		}))
 	}
 
 	// Runs http server.
