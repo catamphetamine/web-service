@@ -38,6 +38,9 @@ describe(`web service`, function()
 
 		web.proxy('/proxied', 'http://google.ru')
 
+		web.redirect('/redirected', 'http://google.ru')
+		web.redirect('/redirected', 'http://google.ru', 302)
+
 		// setTimeout(() => web.shut_down(), 1000)
 
 		await web.listen(9876)

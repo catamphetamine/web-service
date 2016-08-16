@@ -102,7 +102,7 @@ import routing        from './middleware/routing'
 //     parameters:
 //
 //       from       - the URL path from which to redirect
-//       to         - the URL path to which the redirect will be performed
+//       to         - the URL (or path) to which the redirect will be performed
 //       status     - HTTP redirection status (defaults to 301 (Moved Permanently))
 //                    (e.g. can be set to 302 (Moved Temporarily))
 //
@@ -375,7 +375,7 @@ export default function web_service(options = {})
 	}
 
 	// Redirection helper
-	result.redirect = (from, to, status = 301)
+	result.redirect = (from, to, status = 301) =>
 	{
 		web.use(mount(from, async function(ctx)
 		{
