@@ -46,7 +46,10 @@ export default function(options)
 
 				const destroy_cookie = name =>
 				{
+					// Clear the coookie itself (raw value)
 					ctx.cookies.set(name, null)
+					// The ".sig" counterpart contains the hash of the cookie,
+					// so clear it too (used for Koa "signed cookies").
 					ctx.cookies.set(name + '.sig', null)
 				}
 
@@ -141,7 +144,7 @@ export default function(options)
 							}
 							break
 					}
-					
+
 					// If it's a redirect, then do the redirect
 					if (is_redirect(result))
 					{
