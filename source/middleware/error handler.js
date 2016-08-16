@@ -1,7 +1,7 @@
 import { html as html_stack_trace } from 'print-error'
 import { exists } from '../helpers'
 
-export default function({ development, log, html })
+export default function({ development, log, markup_settings })
 {
 	return async function(ctx, next)
 	{
@@ -21,27 +21,40 @@ export default function({ development, log, html })
 		}
 		catch (error)
 		{
+			// HTTP response status code
 			let http_status_code
 
+			// If this error has an HTTP status code set,
+			// then this status code will be used when sending HTTP response.
 			if (exists(error.http_status_code))
 			{
 				http_status_code = error.http_status_code
 			}
-			// superagent errors
+			// Extract HTTP response status code from `superagent` errors
 			// https://github.com/visionmedia/superagent/blob/29ca1fc938b974c6623d9040a044e39dfb272fed/lib/node/response.js#L106
 			else if (typeof error.status === 'number')
 			{
 				http_status_code = error.status
 			}
 
+			// If HTTP response status code has been obtained, then use it.
 			if (exists(http_status_code))
 			{
-				// set Http Response status code according to the error's `code`
+				// Set Http Response status code according to the error's `code`
 				ctx.status = http_status_code
 
-				// set Http Response text according to the error message
-				ctx.body = error.message || 'Internal error'
+				// Set Http Response according to the error thrown
+				if (error.field)
+				{
+					ctx.body = { field: error.field, message: error.message }
+				}
+				else
+				{
+					ctx.body = error.message || 'Internal error'
+				}
 			}
+			// Else, if no HTTP response status code was specified,
+			// default to 500 and a generic error message.
 			else
 			{
 				// log the error, if it's not a normal Api error
@@ -67,48 +80,55 @@ export default function({ development, log, html })
 				ctx.body = 'Internal error'
 			}
 
-			// show error stack trace in development mode for easier debugging
-			if (development && (!http_status_code || (http_status_code === 500 && error.message === 'Internal Server Error')))
+			// (in development mode)
+			// Show stack trace for generic errors for easier debugging
+			if (development)
 			{
-				const { response_status, response_body } = render_stack_trace(error, { html })
+				// https://github.com/koajs/koa/blob/master/docs/api/response.md#responsestatus-1
+				const is_generic_koa_error = http_status_code === 500 && error.message === 'Internal Server Error'
 
-				if (response_body)
+				// If it was a generic (unspecific) error,
+				// then render its stack trace.
+				if (!http_status_code || is_generic_koa_error)
 				{
-					ctx.status = response_status || http_status_code || 500
-					ctx.body = response_body
-					ctx.type = 'html'
+					const { response_status, response_body } = render_stack_trace(error, { markup_settings, log })
 
-					return
+					if (response_body)
+					{
+						ctx.status = response_status || http_status_code || 500
+						ctx.body = response_body
+						ctx.type = 'html'
+					}
 				}
 			}
 		}
 	}
 }
 
-function render_stack_trace(error, { html })
+// Renders the stack trace of an error as HTML markup
+function render_stack_trace(error, { markup_settings, log })
 {
-	// supports custom `html` for an error
+	// Supports custom `html` for an error
 	if (error.html)
 	{
 		return { response_status: error.code, response_body: error.html }
 	}
 
-	// handle `superagent` errors: if an error response was an html, then just render it
+	// Handle `superagent` errors
 	// https://github.com/visionmedia/superagent/blob/29ca1fc938b974c6623d9040a044e39dfb272fed/lib/node/response.js#L106
-	if (typeof error.status === 'number')
+	if (error.response && typeof error.status === 'number')
 	{
-		// if the `superagent` http request returned an html response 
+		// If the `superagent` http request returned an HTML response 
 		// (possibly an error stack trace),
-		// then just output that stack trace
-		if (error.response 
-			&& error.response.headers['content-type']
+		// then just output that stack trace.
+		if (error.response.headers['content-type']
 			&& error.response.headers['content-type'].split(';')[0].trim() === 'text/html')
 		{
 			return { response_status: error.status, response_body: error.message }
 		}
 	}
 
-	// if this error has a stack trace then it can be shown
+	// If this error has a stack trace then it can be shown
 
 	let stack_trace
 
@@ -123,19 +143,23 @@ function render_stack_trace(error, { html })
 		stack_trace = error.original.stack
 	}
 
-	// if this error doesn't have a stack trace - do nothing
+	// If this error doesn't have a stack trace - do nothing
 	if (!stack_trace)
 	{
 		return {}
 	}
 
+	// Render the error's stack trace as HTML markup
 	try
 	{
-		return { response_body: html_stack_trace({ stack: stack_trace }, html) }
+		return { response_body: html_stack_trace({ stack: stack_trace }, markup_settings) }
 	}
 	catch (error)
 	{
-		console.error(error)
-		return { response_status: 500, response_body: error.stack }
+		log.error(error)
+
+		// If error stack trace couldn't be rendered as HTML markup,
+		// then just output it as plain text.
+		return { response_body: error.stack }
 	}
 }
