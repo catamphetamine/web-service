@@ -53,8 +53,9 @@ export default function(options = {})
 					const redirect = new Url(url).set_parameters
 					({
 						...parameters, 
-						error_code : error.code, 
-						error      : error.message 
+						error_field : error.field, 
+						error_code  : error.code, 
+						error       : error.message 
 					})
 					.print()
 
