@@ -26,19 +26,14 @@ export default function({ development, log, markup_settings })
 
 			// If this error has an HTTP status code set,
 			// then this status code will be used when sending HTTP response.
-			if (exists(error.http_status_code))
-			{
-				http_status_code = error.http_status_code
-			}
-			// Extract HTTP response status code from `superagent` errors
-			// https://github.com/visionmedia/superagent/blob/29ca1fc938b974c6623d9040a044e39dfb272fed/lib/node/response.js#L106
-			else if (typeof error.status === 'number')
+			// (this also works for `superagent` errors because they too have the `status` property)
+			if (typeof error.status === 'number')
 			{
 				http_status_code = error.status
 			}
 
 			// If HTTP response status code has been obtained, then use it.
-			if (exists(http_status_code))
+			if (http_status_code)
 			{
 				// Set Http Response status code according to the error's `code`
 				ctx.status = http_status_code
@@ -109,9 +104,9 @@ export default function({ development, log, markup_settings })
 function render_stack_trace(error, { markup_settings, log })
 {
 	// Supports custom `html` for an error
-	if (error.html)
+	if (error.data && error.data.html)
 	{
-		return { response_status: error.code, response_body: error.html }
+		return { response_status: error.status, response_body: error.data.html }
 	}
 
 	// Handle `superagent` errors

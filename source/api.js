@@ -39,7 +39,7 @@ export default function(options = {})
 					// Log the error, if it's not a normal Api error
 					// (prevents log pollution with things like 
 					//  `404 User not found` or `401 Not authenticated`)
-					if (!exists(error.code))
+					if (!exists(error.status))
 					{
 						log.error(error)
 					}
@@ -52,10 +52,10 @@ export default function(options = {})
 					// to which the user is going to be redirected
 					const redirect = new Url(url).set_parameters
 					({
-						...parameters, 
-						error_field : error.field, 
-						error_code  : error.code, 
-						error       : error.message 
+						...parameters,
+						error_field  : error.field,
+						error_status : error.status,
+						error        : error.message
 					})
 					.print()
 

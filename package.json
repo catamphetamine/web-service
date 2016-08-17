@@ -1,6 +1,6 @@
 {
   "name": "web-service",
-  "version": "0.1.29",
+  "version": "0.2.0",
   "description": "Instantiates web services: REST Api, file upload, etc",
   "main": "index.common.js",
   "jsnext:main": "index.es6.js",

@@ -144,7 +144,7 @@ const service = api
 service.listen(3000)
 ```
 
-Each `api` handler is passed the same two arguments as each `routing` handler does (in Web 1.0 mode there's also the third argument which is called in case of an error being thrown from the handler, and the return value of that third argument is gonna be the redirection URL, e.g. `/error?code=${error.code}`).
+Each `api` handler is passed the same two arguments as each `routing` handler does (in Web 1.0 mode there's also the third argument which is called in case of an error being thrown from the handler, and the return value of that third argument is gonna be the redirection URL, e.g. `/error?status=${error.status}`).
 
 ## Tools
 

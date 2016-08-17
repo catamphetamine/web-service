@@ -1,3 +1,8 @@
+0.2.0 / 16.08.2016
+===================
+
+  *  `http` utility now `reject`s the `Promise` with the `error` slightly different from what it was in `0.1.x`: it used to have `.code` property set to HTTP response status, but now that `.code` property is renamed to `.status` (I guess the new name better suits it)
+
 0.1.25 / 07.08.2016
 ===================
 
