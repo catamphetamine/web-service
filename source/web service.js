@@ -48,22 +48,13 @@ import rewrite        from './middleware/rewrite'
 // log                 - bunyan log instance
 //
 // csrf                - enables protection against Cross Site Request Forgery attacks
-//                       (pending)
+//                       (not implemented)
 //
 // returns an object with properties:
 //
-//   shut_down()   - gracefully shuts down the server (pending)
+//   shut_down() - gracefully shuts down the server (not tested)
 //
-//   connections() - returns currently open connections count (not tested)
-//
-//   errors        - a set of common Http errors
-//
-//     Unauthorized
-//     Access_denied
-//     Not_found
-//     Input_missing
-//
-//   file_upload() - enables file upload functionality
+//   upload() - enables file upload functionality
 //
 //     parameters:
 //
@@ -73,7 +64,7 @@ import rewrite        from './middleware/rewrite'
 //
 //       multiple_files - set this flag to true in case of multiple file upload
 //
-//   serve_static_files() - enables serving static files
+//   files() - enables serving static files
 //
 //     parameters:
 //
@@ -81,7 +72,7 @@ import rewrite        from './middleware/rewrite'
 //
 //       filesystem_path - the corresponding filesystem path where the static files reside
 //
-//   listen()             - starts listening for requests
+//   listen() - starts listening for requests
 //
 //     parameters:
 //
@@ -90,16 +81,16 @@ import rewrite        from './middleware/rewrite'
 //
 //     returns: a Promise
 //
-//   mount()             - mounts a middleware at a path
+//   mount() - mounts a Koa middleware at a path
 //
 //     parameters:
 //
 //       path       - the URL path to mount the middleware at
 //       middleware - the middleware to mount
 //
-//   use()               - standard Koa .use() method
+//   use() - standard Koa .use() method
 //
-//   redirect()          - HTTP redirect helper
+//   redirect() - HTTP redirect helper
 //
 //     parameters:
 //
@@ -118,7 +109,7 @@ import rewrite        from './middleware/rewrite'
 //         status   - HTTP redirection status (defaults to 301 (Moved Permanently))
 //                    (e.g. can be set to 302 (Moved Temporarily))
 //
-//   rewrite()          - Rewrites HTTP request URL (for further matching)
+//   rewrite() - Rewrites HTTP request URL (for further matching)
 //
 //     parameters:
 //
@@ -134,7 +125,7 @@ import rewrite        from './middleware/rewrite'
 //                    should return a URL (or a path) to which to rewrite the HTTP request URL;
 //                    if it returns nothing then the URL won't be rewritten.
 //
-//   proxy()             - proxies all requests for this path to another web server
+//   proxy() - proxies all requests for this path to another web server
 //
 //     parameters:
 //

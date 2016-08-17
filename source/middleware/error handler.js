@@ -1,5 +1,5 @@
 import { html as html_stack_trace } from 'print-error'
-import { exists } from '../helpers'
+import { exists, is_object } from '../helpers'
 
 export default function({ development, log, markup_settings })
 {
@@ -39,9 +39,21 @@ export default function({ development, log, markup_settings })
 				ctx.status = http_status_code
 
 				// Set Http Response according to the error thrown
-				if (error.field)
+				if (is_object(error.data))
 				{
-					ctx.body = { field: error.field, message: error.message }
+					const error_data = error.data
+
+					if (!exists(error_data.message))
+					{
+						error_data.message = error.message
+					}
+
+					if (!exists(error_data.status))
+					{
+						error_data.status = error.status
+					}
+
+					ctx.body = error_data
 				}
 				else
 				{
@@ -79,20 +91,22 @@ export default function({ development, log, markup_settings })
 			// Show stack trace for generic errors for easier debugging
 			if (development)
 			{
-				// https://github.com/koajs/koa/blob/master/docs/api/response.md#responsestatus-1
-				const is_generic_koa_error = http_status_code === 500 && error.message === 'Internal Server Error'
-
 				// If it was a generic (unspecific) error,
 				// then render its stack trace.
-				if (!http_status_code || is_generic_koa_error)
+				if (!http_status_code)
 				{
 					const { response_status, response_body } = render_stack_trace(error, { markup_settings, log })
 
 					if (response_body)
 					{
-						ctx.status = response_status || http_status_code || 500
+						ctx.status = response_status || 500
 						ctx.body = response_body
 						ctx.type = 'html'
+
+						// Can be used to reconstruct the original error message
+						ctx.set('X-Error-Message', error.message)
+						// Can be used to reconstruct the original error stack trace
+						ctx.set('X-Error-Stack-Trace', JSON.stringify(error.stack))
 					}
 				}
 			}
@@ -104,9 +118,9 @@ export default function({ development, log, markup_settings })
 function render_stack_trace(error, { markup_settings, log })
 {
 	// Supports custom `html` for an error
-	if (error.data && error.data.html)
+	if (error.html)
 	{
-		return { response_status: error.status, response_body: error.data.html }
+		return { response_status: error.status, response_body: error.html }
 	}
 
 	// Handle `superagent` errors
