@@ -1,3 +1,8 @@
+0.2.2 / 25.08.2016
+===================
+
+  * Added `Date` parsing for `routing` (and `api`) parameters
+
 0.2.0 / 16.08.2016
 ===================
 

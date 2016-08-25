@@ -225,7 +225,7 @@ If someone needs to store additional user data in a "session", such as contents 
 
 ## JWT authentication
 
-To enable [Json Web Tokens](https://jwt.io/) authentication, supply two parameters:
+To enable [Json Web Tokens](https://ponyfoo.com/articles/json-web-tokens-vs-session-cookies) authentication, supply two parameters:
 
  * `keys` array, which is an array of secret keys for data encryption (can have a single element, for example) and is used for siging Json Web Tokens being issued. The newest keys are added to the beginning of the array while the oldest (compromised) ones are moved to the end of the array eventually being removed (see [`keygrip`](https://www.npmjs.com/package/keygrip)). This enables secret key rotation which adds security.
 

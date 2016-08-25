@@ -8,6 +8,7 @@ import { exists, is_object, starts_with } from '../helpers'
 
 // `http` utility
 import http from '../http'
+import parse_dates from '../parse dates'
 
 export default function(options)
 {
@@ -56,6 +57,9 @@ export default function(options)
 				// This route handler parameters,
 				// which are extracted from POST body, GET query, and route parameters.
 				const parameters = { ...ctx.request.body, ...ctx.query, ...ctx.params }
+
+				// Parse JSON dates (for convenience)
+				parse_dates(parameters)
 
 				// Treat empty string parameters as `undefined`s
 				for (let key of Object.keys(parameters))
