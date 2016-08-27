@@ -1,3 +1,5 @@
+import { is_object } from './helpers'
+
 // JSON date deserializer.
 //
 // Automatically converts ISO serialized `Date`s
