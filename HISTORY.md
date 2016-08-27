@@ -1,3 +1,8 @@
+0.2.4 / 27.08.2016
+===================
+
+  * `routing` and `api` now don't wrap primitives into a JSON object when sending HTTP response
+
 0.2.3 / 27.08.2016
 ===================
 

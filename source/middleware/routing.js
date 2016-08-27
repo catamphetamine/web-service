@@ -160,8 +160,14 @@ export default function(options)
 					// Default HTTP status: 200
 					ctx.status = 200
 
-					// Send result JSON object as HTTP response body
-					ctx.body = response(result)
+					// Send result JSON object as HTTP response body.
+					//
+					// `result` may not only be just a JSON object or an array:
+					// it may also be a primitive like a string.
+					// Hence the manual JSON stringifying and specifying content type explicitly.
+					//
+					ctx.body = JSON.stringify(result)
+					ctx.type = 'application/json'
 				}
 
 				// If route handler result is a Promise,
@@ -230,27 +236,6 @@ export default function(options)
 
 		return result
 	}
-}
-
-// Creates HTTP response JSON object
-// out of a route handler result
-function response(result)
-{
-	// Wrap primitives with a dummy JSON object
-	// since a JSON response cannot return anything other than
-	// a JSON object or an Array.
-
-	if (!exists(result))
-	{
-		return {}
-	}
-
-	if (!is_object(result) && !Array.isArray(result))
-	{
-		return { result }
-	}
-
-	return result
 }
 
 // Checks if a route handler requests a redirect to a URL
