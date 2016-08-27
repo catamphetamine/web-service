@@ -81,7 +81,7 @@ export default function({ development, log, markup_settings })
 				// 	log.error(error)
 				// }
 
-				log.error(error, '(http request failed)')
+				log.error(error)
 
 				ctx.status = 500
 				ctx.body = 'Internal error'

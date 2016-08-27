@@ -135,7 +135,13 @@ export default function(options)
 				// with a route handler result
 				const respond = result =>
 				{
-					// Return some special 200 statuses for some special HTTP methods
+					// If it's a redirect, then do the redirect
+					if (is_redirect(result))
+					{
+						return ctx.redirect(result.redirect)
+					}
+
+					// Return some special 2xx statuses for some special HTTP methods
 					// http://goinbigdata.com/how-to-design-practical-restful-api/
 					// http://habrahabr.ru/company/yandex/blog/265569/
 					switch (method)
@@ -146,20 +152,13 @@ export default function(options)
 							{
 								throw new Error(`PUT and DELETE HTTP queries must not return any content.\nRequested ${method.toUpperCase()} ${ctx.originalUrl} and got:\n${util.inspect(result)}`)
 							}
-							break
+							ctx.status = 204 // No Content
+							// No need for setting response body in this case
+							return
 					}
 
-					// If it's a redirect, then do the redirect
-					if (is_redirect(result))
-					{
-						return ctx.redirect(result.redirect)
-					}
-
-					if (!exists(result))
-					{
-						ctx.status = 204 // No Content
-						return
-					}
+					// Default HTTP status: 200
+					ctx.status = 200
 
 					// Send result JSON object as HTTP response body
 					ctx.body = response(result)
@@ -237,6 +236,15 @@ export default function(options)
 // out of a route handler result
 function response(result)
 {
+	// Wrap primitives with a dummy JSON object
+	// since a JSON response cannot return anything other than
+	// a JSON object or an Array.
+
+	if (!exists(result))
+	{
+		return {}
+	}
+
 	if (!is_object(result) && !Array.isArray(result))
 	{
 		return { result }

@@ -1,3 +1,8 @@
+0.2.3 / 27.08.2016
+===================
+
+  * Fixed HTTP status `204` being sent instead of `200` for HEADs, GETs, POSTs and PATCHes.
+
 0.2.2 / 25.08.2016
 ===================
 
