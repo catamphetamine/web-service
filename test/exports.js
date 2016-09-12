@@ -1,7 +1,7 @@
 import chai from 'chai'
 chai.should()
 
-import webservice, { api, errors, http, acl, jwt } from '../index.es6'
+import webservice, { api, errors, http, acl, jwt, generate_unique_filename, generateUniqueFilename } from '../index.es6'
 
 describe(`exports`, function()
 {
@@ -14,6 +14,8 @@ describe(`exports`, function()
 		http.post.should.be.a('function')
 		acl.should.be.a('function')
 		jwt.should.be.a('function')
+		generate_unique_filename.should.be.a('function')
+		generateUniqueFilename.should.be.a('function')
 	})
 
 	it(`should export ES5`, () =>
@@ -27,5 +29,7 @@ describe(`exports`, function()
 		_.http.post.should.be.a('function')
 		_.acl.should.be.a('function')
 		_.jwt.should.be.a('function')
+		_.generate_unique_filename.should.be.a('function')
+		_.generateUniqueFilename.should.be.a('function')
 	})
 })

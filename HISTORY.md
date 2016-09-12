@@ -1,3 +1,11 @@
+0.3.0 / 11.09.2016
+===================
+
+  * (breaking change) file upload's `stream` function now takes an extra `fields` attribute (form fields)
+  * (breaking change) removed `postprocess` option of file upload (use `process` instead)
+  * (breaking change) file upload `respond` is now synchronous
+  * now exporting a basic `generateUniqueFilename(path)` helper function
+
 0.2.4 / 27.08.2016
 ===================
 

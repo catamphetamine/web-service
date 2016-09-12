@@ -189,7 +189,8 @@ service.upload('/upload', path.join(__dirname, '../uploads'),
    // // Instead of first writing files to disk
    // // and then `process`ing them,
    // // the uploaded files may be `stream`ed directly.
-   // stream: async function(file, response)
+   // // `fields` are the `<form/>` fields.
+   // stream: async function(file, fields, response)
    // {
    //    // To stream HTTP response manually
    //    file.pipe(analyzer).pipe(response)

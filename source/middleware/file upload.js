@@ -40,13 +40,13 @@ export default function(...parameters)
 		requires_authentication = false,
 		on_file_uploaded,
 		process,
-		stream
+		stream,
+		respond
 	}
 	= options
 
 	const multiple_files  = options.multiple_files || options.multiple
 	const file_size_limit = options.file_size_limit || options.limit
-	const respond         = options.postprocess || options.respond
 
 	return mount(mount_path, async function(ctx)
 	{
@@ -128,14 +128,14 @@ export default function(...parameters)
 				// If the resolved value should be later sent back in HTTP response,
 				// then `stream` must return a Promise,
 				// and also `respond` parameter must not be `false`.
-				// The second parameter of the `stream` function is ignored in this case.
+				// The third parameter of the `stream` function is ignored in this case.
 				//
 				// If the user of this library wants to stream HTTP response instead
 				// then the `respond` parameter should be set to `false`
-				// and the response data should be streamed to the second parameter
+				// and the response data should be streamed to the third parameter
 				// of the `stream` function (which is a regular Node.js `http.ServerResponse`)
 				// 
-				file_upload_promise = stream(file, ctx.res)
+				file_upload_promise = stream(file, parameters, ctx.res)
 			}
 			else
 			{
@@ -154,7 +154,8 @@ export default function(...parameters)
 							uploaded_file_name : file_name,
 							path               : file_path,
 							ip                 : ctx.request.ip
-						})
+						},
+						parameters)
 					}
 
 					// `process` the file (if needed), returning a result
@@ -167,7 +168,8 @@ export default function(...parameters)
 							uploaded_file_name : file_name,
 							path               : file_path,
 							ip                 : ctx.request.ip
-						})
+						},
+						parameters)
 					}
 
 					// Default result
@@ -200,19 +202,33 @@ export default function(...parameters)
 
 		let response
 
-		if (multiple_files)
+		if (process)
 		{
-			response = { files: file_upload_results, parameters }
+			if (multiple_files)
+			{
+				response = file_upload_results
+			}
+			else
+			{
+				response = file_upload_results[0]
+			}
 		}
 		else
 		{
-			response = { file: file_upload_results[0], parameters }
+			if (multiple_files)
+			{
+				response = { files: file_upload_results, parameters }
+			}
+			else
+			{
+				response = { file: file_upload_results[0], parameters }
+			}
 		}
 
 		// Optionally modify the HTTP response
 		if (respond)
 		{
-			response = await respond.call(this, response)
+			response = respond.call(this, response)
 		}
 
 		// HTTP response
@@ -232,16 +248,10 @@ function fs_exists(path)
 
 // Generates a unique temporary file name inside the `folder` path.
 // Returns a Promise resolving to the randomly generated filename.
-async function generate_unique_filename(folder, options)
+export async function generate_unique_filename(folder, options)
 {
 	// 24 bytes for UUID filename
 	let file_name = uid.sync(24)
-
-	// Add file extension
-	if (options.dot_extension)
-	{
-		file_name += options.dot_extension
-	}
 
 	// Check if a file with such a name exists
 	const exists = await fs_exists(path.join(folder, file_name))
@@ -255,9 +265,9 @@ async function generate_unique_filename(folder, options)
 
 	// If a file with this name already exists, then retry
 
-	if (options.log)
+	if (options.on_collision)
 	{
-		options.log.info(`Generate unique file name: collision for "${file_name}". Taking another try.`)
+		options.on_collision(file_name)
 	}
 
 	return await generate_unique_filename(folder, options)
@@ -279,7 +289,16 @@ async function upload_file(file, { upload_folder, log })
 	}
 
 	// Generate random unique filename
-	const file_name = await generate_unique_filename(upload_folder, { log }) // dot_extension: path.extname(file.filename), 
+	const file_name = await generate_unique_filename(upload_folder,
+	{
+		on_collision: (file_name) =>
+		{
+			log.info(`Generate unique file name: collision for "${file_name}". Taking another try.`)
+		}
+	})
+
+	// dot_extension: path.extname(file.filename)
+
 	const output_file = path.join(upload_folder, file_name)
 
 	// Write the file to disk
