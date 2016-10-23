@@ -1,3 +1,8 @@
+0.4.0 / 23.10.2016
+==================
+
+  * JWT is now only looked up in the HTTP Authorization header. JWT is no more looked up in the `authentication` cookie since it's prone to [Cross-Site Request Forgery attacks](http://docs.spring.io/spring-security/site/docs/current/reference/html/csrf.html).
+
 0.3.0 / 11.09.2016
 ===================
 

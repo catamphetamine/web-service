@@ -47,9 +47,6 @@ import rewrite        from './middleware/rewrite'
 //
 // log                 - bunyan log instance
 //
-// csrf                - enables protection against Cross Site Request Forgery attacks
-//                       (not implemented)
-//
 // returns an object with properties:
 //
 //   shut_down() - gracefully shuts down the server (not tested)
@@ -241,29 +238,6 @@ export default function web_service(options = {})
 		// Set up http post request handling.
 		// Usage: ctx.request.body
 		web.use(body_parser({ formLimit: '100mb' }))
-	}
-
-	if (options.csrf)
-	{
-		// Cross Site Request Forgery protection
-		//
-		// также: в api client'е при любом запросе выставлять заголовок X-Csrf-Token = csrf token cookie.
-		//
-		// // Cross Site Request Forgery token check
-		// web.use(function* (next)
-		// {
-		// 	// on login:
-		// 	import crypto from 'crypto'
-		// 	const hmac = crypto.createHmac('sha1', configuration.session_secret_keys.first())
-		// 	hmac.update(ctx.session)
-		// 	ctx.cookies.set('csrf-token', hmac.digest('hex'))
-		//
-		// 	// else, if logged in
-		// 	if (ctx.get('X-Csrf-Token') !== ctx.cookies.get('csrf-token'))
-		// 	{
-		// 			throw new Errors.Access_denied(`Cross Site Request Forgery token mismatch. Expected "csrf-token" cookie value ${ctx.cookies.get('csrf-token')} to equal "X-Csrf-Token" header value ${ctx.get('X-Csrf-Token')}`)
-		// 	}
-		// })
 	}
 
 	// Enables REST routing

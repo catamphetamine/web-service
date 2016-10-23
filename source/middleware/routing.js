@@ -36,6 +36,9 @@ export default function(options)
 
 				const get_cookie = name => ctx.cookies.get(name)
 
+				// https://github.com/pillarjs/cookies#cookiesset-name--value---options--
+				// `path` is "/" by default
+				// `httpOnly` is `true` by default
 				const set_cookie = (name, value, options = {}) =>
 				{
 					// Set the cookie to expire in January 2038 (the fartherst it can get)

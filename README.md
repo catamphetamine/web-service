@@ -48,7 +48,7 @@ The `utilities` object holds:
 	destroy_cookie,
 
 	// If a Json Web Token was supplied in an HTTP request
-	// (`Authorization` HTTP header or `authentication` cookie),
+	// (`Authorization: Bearer {token}` HTTP header),
 	// then these three properties are set.
 	//
 	// The `user` object is gonna have 
@@ -244,9 +244,9 @@ const service = webservice
 })
 ```
 
-And also set `authentication` cookie on user login. The contents of the cookie is gonna be the signed Json Web Token (data inside the token can be read, i.e. it's not encrypted, but it can't be modified without breaking it because it is signed with a secret key).
+And also, for example, set some kind of authentication cookie on user login. The contents of the cookie can be the signed Json Web Token (data inside the token can be read, i.e. it's not encrypted, but it can't be modified without breaking it because it is signed with a secret key).
 
-Example (using `api` service):
+An example of setting authentication cookie on user login (using `api` service):
 
 ```js
 import { jwt, errors } from 'web-service'
@@ -271,6 +271,8 @@ export default function(api)
 		const payload = { role: 'admin' }
 		const token = jwt(payload, keys, user_id, jwt_id)
 
+		// The cookie is "HttpOnly" by default
+		// (that means it can only be read on the server-side)
 		set_cookie('authentication', token, { signed: false })
 	}
 
@@ -290,6 +292,8 @@ export default function(api)
 	})
 }
 ```
+
+This authentication cookie can later be read when the user navigates the website once again later, and then the token obtained from the cookie can be used to query the server with the proper `Authorization: Bearer {token}` HTTP header. If using authentication cookie, it should only be read by harmless page rendering service and never directly by HTTP API service: this is the reason why API only looks for `Authorization: Bearer {token}` HTTP header and never looks for the cookie itself — because this way the user is guarded against [Cross-Site Request Forgery attacks](http://docs.spring.io/spring-security/site/docs/current/reference/html/csrf.html). The cookie should also be "HttpOnly" to make it only readable on the server-side (to protect the user from session hijacking via XSS attacks).
 
 ## Contributing
 

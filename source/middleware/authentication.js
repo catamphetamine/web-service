@@ -2,8 +2,7 @@ import jwt from 'jsonwebtoken'
 
 import errors from '../errors'
 
-// First looks for JWT token inside HTTP Authorization header,
-// then looks for `authentication` cookie.
+// Looks for JWT token inside HTTP Authorization header
 function get_jwt_token(context)
 {
 	// Parses "Authorization: Bearer ${token}"
@@ -19,14 +18,15 @@ function get_jwt_token(context)
 		// return { error: 'Bad Authorization header format. Format is "Authorization: Bearer <token>"' }
 	}
 
-	// Tries the "authentication" cookie
-	if (context.cookies.get('authentication'))
-	{
-		return { token: context.cookies.get('authentication') }
-	}
+	// (doesn't read cookies anymore to protect users from CSRF attacks)
+	// // Tries the "authentication" cookie
+	// if (context.cookies.get('authentication'))
+	// {
+	// 	return { token: context.cookies.get('authentication') }
+	// }
 
 	// No JWT token was found
-	return { error: `JWT token not found: no "Authorization: Bearer {token}" HTTP header and no "authentication" cookie.` }
+	return { error: `JWT token not found: no "Authorization: Bearer {token}" HTTP header specified.` }
 }
 
 // Looks for JWT token, and if it is found, sets some variables.
