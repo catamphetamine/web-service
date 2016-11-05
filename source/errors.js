@@ -64,6 +64,13 @@ export default
 	//
 	Input_rejected : custom_error('Input rejected', { status: 422 }),
 
+	// 429 Too Many Requests
+	//
+	// The user has sent too many requests in a given amount of time.
+	// Intended for use with rate-limiting schemes.
+	//
+	Too_many_requests : custom_error('Too many requests', { status: 429 }),
+
 	// 500 Internal Server Error
 	//
 	// HTTP Request input is valid, but the service encountered
