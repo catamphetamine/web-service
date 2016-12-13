@@ -1,7 +1,7 @@
-0.4.2 / 13.12.2016
+0.4.3 / 13.12.2016
 ==================
 
-  * Misc fix for `Date` parsing regular expression
+  * Fix for `Date` parsing regular expression
 
 0.4.1 / 05.11.2016
 ==================

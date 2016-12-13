@@ -1,5 +1,26 @@
 import { is_object } from './helpers'
 
+// ISO 8601 date regular expression
+// Adapted from: http://stackoverflow.com/a/14322189/970769
+
+const hours = '([01]\\d|2[0-3])'
+const minutes = '[0-5]\\d'
+const midnight_weird = '24\\:00'
+const seconds = '[0-5]\\d'
+const milliseconds = '\\d+'
+const time = `(${hours}\\:${minutes}|${midnight_weird})(\\:${seconds}([\\.,]${milliseconds})?)?`
+
+const timezone_hours = `([01]\\d|2[0-3])`
+const timezone_minutes = `[0-5]\\d`
+const timezone = `([zZ]|([\\+-])${timezone_hours}\\:?(${timezone_minutes})?)?`
+
+const year = '\\d{4}'
+const month = '(0[1-9]|1[0-2])'
+const day = '([12]\\d|0[1-9]|3[01])'
+
+export const ISO_date_regexp = `${year}-${month}-${day}([T\\s]${time}${timezone})?`
+export const ISO_date_matcher = new RegExp('^' + ISO_date_regexp + '$')
+
 // JSON date deserializer.
 //
 // Automatically converts ISO serialized `Date`s
@@ -12,15 +33,11 @@ import { is_object } from './helpers'
 //
 // http://stackoverflow.com/questions/14488745/javascript-json-date-deserialization/23691273#23691273
 
-// ISO 8601 date regular expression
-// http://stackoverflow.com/a/14322189/970769
-const ISO = /^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/
-
-// Walks JSON object tree and mutates the object
+// Walks JSON object tree
 export default function parse_dates(object)
 {
 	// If it's a date in an ISO string format, then parse it
-	if (typeof object === 'string' && ISO.test(object))
+	if (typeof object === 'string' && ISO_date_matcher.test(object))
 	{
 		return new Date(object)
 	}
