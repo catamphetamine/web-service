@@ -8,7 +8,7 @@ import { exists, is_object, starts_with } from '../helpers'
 
 // `http` utility
 import http from '../http'
-import parse_dates from '../parse dates'
+import parse_dates from '../date parser'
 
 export default function(options)
 {

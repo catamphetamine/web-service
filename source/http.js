@@ -1,6 +1,6 @@
 import superagent from 'superagent'
 import { is_object } from './helpers'
-import parse_dates from './parse dates'
+import parse_dates from './date parser'
 
 // HTTP request methods
 const methods =
