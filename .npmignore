@@ -2,6 +2,12 @@
 .gitignore
 .gitattributes
 
+# Babel
+.babelrc
+
+# Sources aren't needed for npm
+/source/
+
 # testing package
 /web-service-*.tgz
 
@@ -34,9 +40,6 @@ npm-debug.log
 
 # webpack is used in development
 /webpack.config.js
-
-# babel is used for compilation
-/.babelrc
 
 # tests aren't needed for npm
 /test/
