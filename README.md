@@ -59,9 +59,11 @@ The `utilities` object holds:
 	user,
 	//
 	// Raw Json Web Token (can be used for additional HTTP requests)
+	access_token,
 	authentication_token,
 	//
 	// Json Web Token id (can be used for token expiration checks)
+	access_token_id,
 	authentication_token_id,
 
 	// The secret keys passed to webservice

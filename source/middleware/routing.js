@@ -122,7 +122,9 @@ export default function(options)
 					// JWT stuff
 					user                    : ctx.user,
 					authentication_error    : ctx.authentication_error,
+					access_token_id         : ctx.jwt_id,
 					authentication_token_id : ctx.jwt_id,
+					access_token            : ctx.jwt,
 					authentication_token    : ctx.jwt,
 
 					// Applicaton's secret signing keys
