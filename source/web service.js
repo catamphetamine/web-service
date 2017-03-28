@@ -286,7 +286,7 @@ export default function web_service(options = {})
 	// Shuts down the HTTP server.
 	// Returns a Promise.
 	// (this method wasn't tested)
-	result.shutdown = function()
+	result.close = function()
 	{
 		// shutting_down = true
 
@@ -311,7 +311,7 @@ export default function web_service(options = {})
 	}
 
 	// Legacy method name (0.4.x)
-	result.shut_down = result.shutdown
+	result.shut_down = result.close
 
 	// Returns the number of currently present HTTP connections.
 	// (this method wasn't tested)
