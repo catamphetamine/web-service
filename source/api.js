@@ -77,10 +77,5 @@ export default function(options = {})
 		api_module(api)
 	}
 
-	const result = 
-	{
-		listen: (port, host) => web.listen(port, host)
-	}
-
-	return result
+	return web
 }

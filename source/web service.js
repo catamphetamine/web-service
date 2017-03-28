@@ -49,7 +49,7 @@ import rewrite        from './middleware/rewrite'
 //
 // returns an object with properties:
 //
-//   shut_down() - gracefully shuts down the server (not tested)
+//   shutdown() - gracefully shuts down the server (not tested)
 //
 //   upload() - enables file upload functionality
 //
@@ -265,30 +265,30 @@ export default function web_service(options = {})
 	// Active HTTP proxy servers
 	const proxies = []
 
-	// HTTP server shutdown flag
-	let shut_down = false
+	// // HTTP server shutdown flag
+	// let shutting_down = false
 
-	// In case of server shutdown, stop accepting new HTTP connections.
-	// (this code wasn't tested)
-	web.use(async function (ctx, next)
-	{
-		if (shut_down)
-		{
-			ctx.status = 503
-			ctx.message = 'The server is shutting down for maintenance'
-		}
-		else
-		{
-			await next()
-		}
-	})
+	// // In case of server shutdown, stop accepting new HTTP connections.
+	// // (this code wasn't tested)
+	// web.use(async function (ctx, next)
+	// {
+	// 	if (shutting_down)
+	// 	{
+	// 		ctx.status = 503
+	// 		ctx.message = 'The server is shutting down for maintenance'
+	// 	}
+	// 	else
+	// 	{
+	// 		await next()
+	// 	}
+	// })
 
 	// Shuts down the HTTP server.
 	// Returns a Promise.
 	// (this method wasn't tested)
-	result.shut_down = function()
+	result.shutdown = function()
 	{
-		shut_down = true
+		// shutting_down = true
 
 		// Pending promises
 		const pending = []
@@ -309,6 +309,9 @@ export default function web_service(options = {})
 
 		return Promise.all(pending)
 	}
+
+	// Legacy method name (0.4.x)
+	result.shut_down = result.shutdown
 
 	// Returns the number of currently present HTTP connections.
 	// (this method wasn't tested)

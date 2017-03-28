@@ -1,9 +1,9 @@
 {
   "name": "web-service",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Instantiates web services: REST Api, file upload, etc",
   "main": "index.common.js",
-  "jsnext:main": "index.es6.js",
+  "//jsnext:main": "index.es6.js",
   "dependencies": {
     "async-busboy": "^0.1.0",
     "babel-runtime": "^6.6.1",
