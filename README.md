@@ -1,8 +1,8 @@
 # web-service
 
-[![NPM Version][npm-badge]][npm]
-[![Build Status][travis-badge]][travis]
-[![Test Coverage][coveralls-badge]][coveralls]
+[![npm version](https://img.shields.io/npm/v/web-service.svg?style=flat-square)](https://www.npmjs.com/package/web-service)
+[![npm downloads](https://img.shields.io/npm/dm/web-service.svg?style=flat-square)](https://www.npmjs.com/package/web-service)
+[![coverage](https://img.shields.io/coveralls/halt-hammerzeit/web-service/master.svg?style=flat-square)](https://coveralls.io/r/halt-hammerzeit/web-service?branch=master)
 
 Easy web services on Node.js
 
@@ -336,9 +336,3 @@ npm install [module name with version].tar.gz
 ## License
 
 [MIT](LICENSE)
-[npm]: https://www.npmjs.org/package/web-service
-[npm-badge]: https://img.shields.io/npm/v/web-service.svg?style=flat-square
-[travis]: https://travis-ci.org/halt-hammerzeit/web-service
-[travis-badge]: https://img.shields.io/travis/halt-hammerzeit/web-service/master.svg?style=flat-square
-[coveralls]: https://coveralls.io/r/halt-hammerzeit/web-service?branch=master
-[coveralls-badge]: https://img.shields.io/coveralls/halt-hammerzeit/web-service/master.svg?style=flat-square
