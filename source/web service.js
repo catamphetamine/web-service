@@ -285,7 +285,6 @@ export default function web_service(options = {})
 
 	// Shuts down the HTTP server.
 	// Returns a Promise.
-	// (this method wasn't tested)
 	result.close = function()
 	{
 		// shutting_down = true
@@ -294,7 +293,7 @@ export default function web_service(options = {})
 		const pending = []
 
 		// Shut down http proxies
-		for (let proxy of proxies)
+		for (const proxy of proxies)
 		{
 			pending.push(promisify(proxy.close, proxy)())
 		}
@@ -305,7 +304,10 @@ export default function web_service(options = {})
 		// Unlike that event, it will be called with an Error as its only argument 
 		// if the server was not open when it was closed.
 		//
-		pending.push(promisify(web.close, web)())
+		for (const server of result.web_server_instances)
+		{
+			pending.push(promisify(server.close, server)())
+		}
 
 		return Promise.all(pending)
 	}
@@ -382,17 +384,30 @@ export default function web_service(options = {})
 		web.use(rewrite(from, options))
 	}
 
+	// For shutting down web server
+	result.web_server_instances = []
+	result.register = instance => result.web_server_instances.push(instance)
+
+	// Returns a "callback" which can be used to start Node.js servers:
+	// const http = require('http')
+	// http.createServer(result.callback()).listen(3000)
+	// http.createServer(result.callback()).listen(3001)
+	result.callback = () => web.callback()
+
 	// Runs http server.
 	// Returns a Promise resolving to an instance of HTTP server.
-	result.listen = (port, host) =>
+	result.listen = (port, host, options) =>
 	{
 		if (is_object(port))
 		{
+			options = host
+
 			host = port.host
 			port = port.port
 		}
 
 		host = host || '0.0.0.0'
+		options = options || {}
 
 		return new Promise((resolve, reject) =>
 		{
@@ -411,10 +426,13 @@ export default function web_service(options = {})
 			})
 
 			// Create HTTP server
-			const http_web_server = http.createServer()
+			const web_server = options.https ? https.createServer(is_object(options.https) ? options.https : undefined) : http.createServer()
+
+			// Store the reference for shutting down later
+			result.register(web_server)
 
 			// // Enable Koa for handling HTTP requests
-			// http_web_server.on('request', web.callback())
+			// web_server.on('request', web.callback())
 
 			// Copy-pasted from 
 			// https://github.com/koajs/koala/blob/master/lib/app.js
@@ -423,8 +441,8 @@ export default function web_service(options = {})
 			// http://crypto.pp.ua/2011/02/mexanizm-expectcontinue/
 			//
 			const koa_callback = web.callback()
-			http_web_server.on('request', koa_callback)
-			http_web_server.on('checkContinue', function(request, response)
+			web_server.on('request', koa_callback)
+			web_server.on('checkContinue', function(request, response)
 			{
 				// Requests with `Expect: 100-continue`
 				request.checkContinue = true
@@ -432,14 +450,14 @@ export default function web_service(options = {})
 			})
 
 			// Starts HTTP server
-			http_web_server.listen(port, host, error =>
+			web_server.listen(port, host, (error) =>
 			{
 				if (error)
 				{
 					return reject(error)
 				}
 
-				resolve(http_web_server)
+				resolve(web_server)
 			})
 			// .on('connection', () => connections++)
 			// .on('close', () => connections--)
