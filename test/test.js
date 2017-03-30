@@ -44,6 +44,8 @@ describe(`web service`, function()
 		// setTimeout(() => web.shut_down(), 1000)
 
 		await web.listen(9876)
+
+		await web.close()
 	}))
 
 	it(`should start an api service`, mocha_async(async () =>

@@ -137,6 +137,9 @@ export default function web_service(options = {})
 	// This object will be returned
 	const result = {}
 
+	// Closers for proxies and running web servers
+	const closers = []
+
 	// Create a Koa web application
 	const web = new koa()
 
@@ -262,9 +265,6 @@ export default function web_service(options = {})
 		}
 	}
 
-	// Active HTTP proxy servers
-	const proxies = []
-
 	// // HTTP server shutdown flag
 	// let shutting_down = false
 
@@ -289,27 +289,9 @@ export default function web_service(options = {})
 	{
 		// shutting_down = true
 
-		// Pending promises
-		const pending = []
-
-		// Shut down http proxies
-		for (const proxy of proxies)
-		{
-			pending.push(promisify(proxy.close, proxy)())
-		}
-
+		// Shut down http proxies and running web servers.
 		// Stops the server from accepting new connections and keeps existing connections. 
-		//
-		// The optional callback will be called once the 'close' event occurs. 
-		// Unlike that event, it will be called with an Error as its only argument 
-		// if the server was not open when it was closed.
-		//
-		for (const server of result.web_server_instances)
-		{
-			pending.push(promisify(server.close, server)())
-		}
-
-		return Promise.all(pending)
+		return Promise.all(closers.map(closer => closer()))
 	}
 
 	// Legacy method name (0.4.x)
@@ -368,7 +350,9 @@ export default function web_service(options = {})
 	result.proxy = (from_path, to, proxy_options) =>
 	{
 		const { proxy, middleware } = proxier(from_path, to, proxy_options)
-		proxies.push(proxy)
+		// This closer is for standalone `.listen()` proxies
+		// which is not used here.
+		// closers.push(() => return promisify(proxy.close, proxy)())
 		web.use(middleware)
 	}
 
@@ -383,10 +367,6 @@ export default function web_service(options = {})
 	{
 		web.use(rewrite(from, options))
 	}
-
-	// For shutting down web server
-	result.web_server_instances = []
-	result.register = instance => result.web_server_instances.push(instance)
 
 	// Returns a "callback" which can be used to start Node.js servers:
 	// const http = require('http')
@@ -409,61 +389,72 @@ export default function web_service(options = {})
 		host = host || '0.0.0.0'
 		options = options || {}
 
-		return new Promise((resolve, reject) =>
+		// The last route - throws "Not found" error
+		web.use(async function(ctx)
 		{
-			// The last route - throws "Not found" error
-			web.use(async function(ctx)
+			ctx.status = 404
+			ctx.message = `The requested resource not found: ${ctx.method} ${ctx.url}`
+			
+			// Reduces noise in the `log` in case of errors
+			// (web browsers query '/favicon.ico' automatically)
+			if (!ends_with(ctx.path, '/favicon.ico'))
 			{
-				ctx.status = 404
-				ctx.message = `The requested resource not found: ${ctx.method} ${ctx.url}`
-				
-				// Reduces noise in the `log` in case of errors
-				// (web browsers query '/favicon.ico' automatically)
-				if (!ends_with(ctx.path, '/favicon.ico'))
-				{
-					log.error(ctx.message, 'Web server error: Not found')
-				}
-			})
-
-			// Create HTTP server
-			const web_server = options.https ? https.createServer(is_object(options.https) ? options.https : undefined) : http.createServer()
-
-			// Store the reference for shutting down later
-			result.register(web_server)
-
-			// // Enable Koa for handling HTTP requests
-			// web_server.on('request', web.callback())
-
-			// Copy-pasted from 
-			// https://github.com/koajs/koala/blob/master/lib/app.js
-			//
-			// "Expect: 100-continue" is something related to http request body parsing
-			// http://crypto.pp.ua/2011/02/mexanizm-expectcontinue/
-			//
-			const koa_callback = web.callback()
-			web_server.on('request', koa_callback)
-			web_server.on('checkContinue', function(request, response)
-			{
-				// Requests with `Expect: 100-continue`
-				request.checkContinue = true
-				koa_callback(request, response)
-			})
-
-			// Starts HTTP server
-			web_server.listen(port, host, (error) =>
-			{
-				if (error)
-				{
-					return reject(error)
-				}
-
-				resolve(web_server)
-			})
-			// .on('connection', () => connections++)
-			// .on('close', () => connections--)
+				log.error(ctx.message, 'Web server error: Not found')
+			}
 		})
+
+		// Create HTTP server
+		const web_server = options.https ? https.createServer(is_object(options.https) ? options.https : undefined) : http.createServer()
+	
+		// // Enable Koa for handling HTTP requests
+		// web_server.on('request', web.callback())
+
+		// Copy-pasted from 
+		// https://github.com/koajs/koala/blob/master/lib/app.js
+		//
+		// "Expect: 100-continue" is something related to http request body parsing
+		// http://crypto.pp.ua/2011/02/mexanizm-expectcontinue/
+		//
+		const koa_callback = web.callback()
+		web_server.on('request', koa_callback)
+		web_server.on('checkContinue', function(request, response)
+		{
+			// Requests with `Expect: 100-continue`
+			request.checkContinue = true
+			koa_callback(request, response)
+		})
+
+		// Starts HTTP server
+		const web_server_start_promise = web_server_listen(web_server, port, host)
+
+		closers.push(() => web_server_start_promise.then(() =>
+		{
+			return promisify(web_server.close, web_server)()
+		}))
+
+		return web_server_start_promise
+
+		// .on('connection', () => connections++)
+		// .on('close', () => connections--)
 	}
 
 	// done
 	return result
+}
+
+function web_server_listen(web_server, port, host)
+{
+	return new Promise((resolve, reject) =>
+	{
+		// Starts HTTP server
+		web_server.listen(port, host, (error) =>
+		{
+			if (error)
+			{
+				return reject(error)
+			}
+
+			resolve(web_server)
+		})
+	})
 }
