@@ -43,9 +43,9 @@ The `utilities` object holds:
 	ip,
 
 	// Cookie helpers
-	get_cookie,
-	set_cookie,
-	destroy_cookie,
+	getCookie,
+	setCookie,
+	destroyCookie,
 
 	// If a Json Web Token was supplied in an HTTP request
 	// (`Authorization: Bearer {token}` HTTP header),
@@ -54,17 +54,25 @@ The `utilities` object holds:
 	// The `user` object is gonna have 
 	// a user `id` extracted from the token
 	// along with all the extra fields 
-	// extracted by `authentication` function 
+	// extracted by `authentication.userInfo(payload)` function (plus user `id`)
 	// (see "Json Web Token" section)
 	user,
 	//
 	// Raw Json Web Token (can be used for additional HTTP requests)
-	access_token,
-	authentication_token,
+	accessToken,
 	//
 	// Json Web Token id (can be used for token expiration checks)
-	access_token_id,
-	authentication_token_id,
+	accessTokenId,
+	//
+	// Json Web Token payload (can be used for checking `scopes`)
+	accessTokenPayload,
+	//
+	// Checks that a user has at least one of the roles
+	// which are supplied as arguments (comma separated).
+	// Throws a `new errors.Unauthorized()` otherwise.
+	// In order for this to work `authentication.userInfo(payload)`
+	// should return an object with a `.role` property (String).
+	role(role1, role2, ...),
 
 	// The secret keys passed to webservice
 	keys,
@@ -78,12 +86,15 @@ The `utilities` object holds:
 	// then this "internal" HTTP client utility will send HTTP requests
 	// with "Authorization" HTTP header set appropriately.
 	//
-	// Therefore this `internal_http` utility should only be used
+	// Therefore this `internalHttp` utility should only be used
 	// for sending HTTP requests to your own servers
 	// (hence the word "internal")
 	// to prevent leaking JWT token to a third party.
 	//
-	internal_http
+	internalHttp,
+
+	// Koa `ctx` (for advanced use cases)
+	ctx
 }
 ```
 
@@ -107,7 +118,7 @@ const service = api
 			{
 				if (id <= 0)
 				{
-					throw new errors.Input_rejected(`Invalid id: ${id}`)
+					throw new errors.InputRejected(`Invalid id: ${id}`)
 				}
 
 				return await database.get(id)
@@ -118,7 +129,7 @@ const service = api
 			{
 				if (input.id <= 0)
 				{
-					throw new errors.Input_rejected(`Invalid id: ${input.id}`)
+					throw new errors.InputRejected(`Invalid id: ${input.id}`)
 				}
 
 				await database.save(input)
@@ -183,8 +194,8 @@ service.upload('/upload', path.join(__dirname, '../uploads'),
       return { stats }
 
       // // Or maybe something like this
-      // const converted_file_name = await convert(path)
-      // return { filename: converted_file_name }
+      // const convertedFileName = await convert(path)
+      // return { filename: convertedFileName }
    }
 
    // // (optional)
@@ -228,25 +239,34 @@ If someone needs to store additional user data in a "session", such as contents 
 
 ## JWT authentication
 
-To enable [Json Web Tokens](https://ponyfoo.com/articles/json-web-tokens-vs-session-cookies) authentication, supply two parameters:
+To enable [Json Web Tokens](https://ponyfoo.com/articles/json-web-tokens-vs-session-cookies) authentication, supply the following parameters:
 
- * `keys` array, which is an array of secret keys for data encryption (can have a single element, for example) and is used for siging Json Web Tokens being issued. The newest keys are added to the beginning of the array while the oldest (compromised) ones are moved to the end of the array eventually being removed (see [`keygrip`](https://www.npmjs.com/package/keygrip)). This enables secret key rotation which adds security.
+ * `keys` which is an array of secret keys for data encryption (can have a single element, for example) and is used for siging Json Web Tokens being issued. The newest keys are added to the beginning of the array while the oldest (compromised) ones are moved to the end of the array eventually being removed (see [`keygrip`](https://www.npmjs.com/package/keygrip)). This enables secret key rotation which adds security.
 
- * `authentication` function `(payload)`, which extracts user data from decrypted Json Web Token `payload`.
+ * `authentication.userInfo : function(tokenPayload)` which extracts user info from a decrypted Json Web Token `payload` (except the `id` – it is extracted automatically). The resulting object will be available both as `ctx.user` and the `user` parameter of route handlers (including `api`).
 
- * (optional) `validate_token` `async` function `(token, ctx)`, which validates Json Web Token (`ctx` has `.path`, `.query`, etc) and returns `{ valid: true / false }`.
+ * (optional) (advanced) `refreshAccessToken : async function(ctx)` – refreshes an expired access token (if using an architecture with short lived access tokens and long lived refresh tokens). Either returns a new access token or throws an `Error` (which will not propagate further).
+
+ * (optional) (advanced) `validateAccessToken : function(payload, ctx)` – validates a supplied Json Web Token given its `payload` (and `ctx` argument has `.path`, `.query`, etc). Returns `true` if the access token is considered valid for this "Resource Server" (API server). For example, this function can check that the "audience" (`aud`, e.g. `"api.users.google.com"`) claim matches this particular "Resource Server" (API server) so that a token issued for a particular API server can't be maliciously used to query data from other unrelated API servers.
 
 Example:
 
 ```js
 const service = webservice
 ({
-	keys: ['secret'],
-	authentication: payload => ({ role: payload.role })
+	keys: ['secret', 'older-deprecated-secret'],
+	authentication:
+	{
+		userInfo: payload => ({ roles: payload.roles })
+	}
 })
 ```
 
-And also, for example, set some kind of authentication cookie on user login. The contents of the cookie can be the signed Json Web Token (data inside the token can be read, i.e. it's not encrypted, but it can't be modified without breaking it because it is signed with a secret key).
+Now, when this API server receives an `Authorization` HTTP header it attempts to extract and validate an access token from this header value, and, if succeeded, the `user` object is populated from the acces token payload, so the API server endpoint queried can both know the "current user" and check this user's privileges (without querying any database at all – that's the whole point of authentication tokens).
+
+The reason for passing the access token in the form of an HTTP header instead of a cookie is to guard users against [Cross-Site Request Forgery attacks](http://docs.spring.io/spring-security/site/docs/current/reference/html/csrf.html): even if a user clicks on a malicious link it still won't do anything like transferring all user's funds to the attacker's wallet because while links do carry cookies they don't carry HTTP headers.
+
+Access tokens are usually stored either in a cookie or in `localStorage`. Access tokens are usually made expirable and are accompanied with the corresponding "refresh tokens". This increases the architectural complexity of the system while also increasing its safety.
 
 An example of setting authentication cookie on user login (using `api` service):
 
@@ -255,39 +275,46 @@ import { jwt, errors } from 'web-service'
 
 export default function(api)
 {	
-	api.post('/login', async ({ name, password }, { set_cookie }) =>
+	api.post('/login', async ({ name, password }, { setCookie }) =>
 	{
 		const user = await database.users.get({ name })
 
 		if (!user)
 		{
-			throw new errors.Not_found()
+			throw new errors.NotFound()
 		}
 
 		if (password !== user.password)
 		{
-			throw new errors.Input_rejected(`Wrong password`)
+			throw new errors.InputRejected(`Wrong password`)
 		}
 
-		const jwt_id = '...' // a randomly generated unique id of some kind
-		const payload = { role: 'admin' }
-		const token = jwt(payload, keys, user_id, jwt_id)
+		const tokenId = '...' // a randomly generated unique id of some kind
+		const payload = { roles: ['admin'] }
 
-		// The cookie is "HttpOnly" by default
-		// (that means it can only be read on the server-side)
-		set_cookie('authentication', token, { signed: false })
+		// Generate a non-expiring JWT
+		const token = jwt({ payload, key: 'secret', userId: user.id, tokenId, expiresIn: undefined })
+
+		// Cookies are created being "HttpOnly" by default
+		// (that means it can only be read on the server side).
+		// Pass `httpOnly: false` to make it readable in a web browser.
+		setCookie('authentication', token, { signed: false })
 	}
 
-	api.get('/restricted-data', async ({ parameter }, { user }) =>
+	api.get('/restricted-data', async ({ parameter }, { user, role }) =>
 	{
+		// The `user` parameter is populated from the token payload.
+		// The token is taken from the `Authorization: Bearer ${token}` HTTP header
+		// which must be set on the client side when sending this HTTP request.
+
 		if (!user)
 		{
 			throw new errors.Unauthenticated()
 		}
 
-		if (user.role !== 'admin')
+		if (!role('admin', 'or-some-other-role'))
 		{
-			throw new errors.Access_denied(`Must be an adminstrator to view the data`)
+			throw new errors.AccessDenied()
 		}
 
 		return await database.query(parameter)
@@ -295,7 +322,18 @@ export default function(api)
 }
 ```
 
-This authentication cookie can later be read when the user navigates the website once again later, and then the token obtained from the cookie can be used to query the server with the proper `Authorization: Bearer {token}` HTTP header. If using authentication cookie, it should only be read by harmless page rendering service and never directly by HTTP API service: this is the reason why API only looks for `Authorization: Bearer {token}` HTTP header and never looks for the cookie itself — because this way the user is guarded against [Cross-Site Request Forgery attacks](http://docs.spring.io/spring-security/site/docs/current/reference/html/csrf.html). The cookie should also be "HttpOnly" to make it only readable on the server-side (to protect the user from session hijacking via XSS attacks).
+The upside of storing an access token in a cookie is because cookies are accessible both on the client and on the server while `localStorage` is for the client side only (therefore rendering isomorphic page rendering impossible).
+
+The authentication token cookie can also be further protected (advanced topic, not required) by making it "HttpOnly" so that it's only readable on the server side (further protecting the user from session hijacking via an XSS attack).
+
+If an access token expired and is either not configured to be refreshed via `authentication.refreshAccessToken()` or if access token refresh attempt failed then a `401` HTTP response is sent with the following JSON body (not tested)
+
+```js
+{
+	status: 401,
+	type: 'ACCESS_TOKEN_EXPIRED'
+}
+```
 
 ## Contributing
 

@@ -1,6 +1,6 @@
 {
   "name": "web-service",
-  "version": "0.4.12",
+  "version": "0.5.0",
   "description": "Instantiates web services: REST Api, file upload, etc",
   "main": "index.common.js",
   "//jsnext:main": "index.es6.js",
@@ -11,7 +11,7 @@
     "fs-extra": "^0.30.0",
     "http-proxy": "^1.14.0",
     "ip": "^1.1.3",
-    "jsonwebtoken": "^5.5.4",
+    "jsonwebtoken": "^7.4.0",
     "koa": "^2.0.0",
     "koa-bodyparser": "^3.1.0",
     "koa-bunyan": "^1.0.0",

@@ -80,6 +80,8 @@ for (let method of methods)
 						{
 							// Set error `data` from response body,
 							case 'application/json':
+							// http://jsonapi.org/
+							case 'application/vnd.api+json':
 								// if (!is_object(error.data))
 								error.data = parse_dates(response.body)
 

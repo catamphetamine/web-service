@@ -27,18 +27,19 @@ export default function(options)
 			// by the error-catching middleware up the middleware chain
 			router[method](path, function(ctx, next)
 			{
-				// Sessions aren't currently used
-				const session = ctx.session
-				const session_id = ctx.sessionId
-				const destroy_session = () => ctx.session = null
+				// // Sessions aren't currently used
+				// const session = ctx.session
+				// const session_id = ctx.sessionId
+				// const destroy_session = () => ctx.session = null
 
 				// Cookie helpers
 
 				const get_cookie = name => ctx.cookies.get(name)
 
 				// https://github.com/pillarjs/cookies#cookiesset-name--value---options--
-				// `path` is "/" by default
-				// `httpOnly` is `true` by default
+				// `path` is "/" by default.
+				// `httpOnly` is `true` by default.
+				// `signed` is `true` by default.
 				const set_cookie = (name, value, options = {}) =>
 				{
 					// Set the cookie to expire in January 2038 (the fartherst it can get)
@@ -78,13 +79,13 @@ export default function(options)
 
 				// If Json Web Tokens are used for authentication,
 				// then add JWT Authorization header to internal HTTP requests.
-				if (ctx.jwt)
+				if (ctx.accessToken)
 				{
 					// Customize all methods of `http` utility
 					http_client = {}
 
 					// HTTP Authorization header value for a JWT token
-					const jwt_header = `Bearer ${ctx.jwt}`
+					const jwt_header = `Bearer ${ctx.accessToken}`
 
 					// For each HTTP method
 					for (let key of Object.keys(http))
@@ -103,7 +104,7 @@ export default function(options)
 				}
 
 				// Сall the route handler with `parameters` and a utility object
-				const result = action.bind(ctx)(parameters,
+				const result = action(parameters,
 				{
 					// Client's IP address.
 					// Trusts 'X-Forwarded-For' HTTP header.
@@ -113,19 +114,25 @@ export default function(options)
 					get_cookie,
 					set_cookie,
 					destroy_cookie,
+					// camelCase aliases
+					getCookie     : get_cookie,
+					setCookie     : set_cookie,
+					destroyCookie : destroy_cookie,
 
-					// Sessions aren't used currently
-					session,
-					session_id,
-					destroy_session,
+					// // Sessions aren't used currently
+					// session,
+					// session_id,
+					// destroy_session,
 
 					// JWT stuff
 					user                    : ctx.user,
-					authentication_error    : ctx.authentication_error,
-					access_token_id         : ctx.jwt_id,
-					authentication_token_id : ctx.jwt_id,
-					access_token            : ctx.jwt,
-					authentication_token    : ctx.jwt,
+					access_token_id         : ctx.accessTokenId,
+					access_token            : ctx.accessToken,
+					access_token_payload    : ctx.accessTokenPayload,
+					// camelCase aliases
+					accessTokenId           : ctx.accessTokenId,
+					accessToken             : ctx.accessToken,
+					accessTokenPayload      : ctx.accessTokenPayload,
 
 					// Applicaton's secret signing keys
 					keys : options.keys,
@@ -133,7 +140,15 @@ export default function(options)
 					// internal `http` utility
 					// (only use it for internal HTTP requests,
 					//  because it will send cookies and JWT tokens too)
-					internal_http : http_client
+					internal_http : http_client,
+					// camelCase aliases
+					internalHttp  : http_client,
+
+					// If `authentication` is used
+					role : ctx.role,
+
+					// For advanced use cases
+					ctx
 				})
 
 				// Responds to this HTTP request
@@ -209,9 +224,9 @@ export default function(options)
 	//
 	if (typeof options.routing !== 'string')
 	{
-		if (!options.parse_body)
+		if (!options.parseBody)
 		{
-			throw new Error(`"parse_body" was set to false and "routing" was set to true. Set "routing" to a path then.`)
+			throw new Error(`"parseBody" was set to false and "routing" was set to true. Set "routing" to a path then.`)
 		}
 
 		const result =

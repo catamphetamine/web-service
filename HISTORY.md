@@ -1,3 +1,20 @@
+0.5.0 / 12.05.2016
+==================
+
+Rewrote `authentication` logic – it now supports Auth0 style authentication: expiring "access tokens" and "refresh tokens" (with automatic token refresh feature).
+
+Breaking changes:
+
+  * `authentication` used to be a function. Now it's an object rather than a function.
+  * `authentication : function(payload)` -> `authentication.userInfo : function(payload)`
+  * Added `authentication.refreshAccessToken(ctx)` optional parameter for automatically refreshing expired tokens
+  * Route handlers (including `api` route handlers) are no longer bound to `this`, use the new `ctx` parameter instead: `({ ... }, { ..., ctx }) => {}`
+  * `jwt()` function parameters renamed: `user_id` -> `userId`, `jwt_id` -> `tokenId`. `expiresIn` parameter added. `keys` parameter changed to a single `key` (pass it like `key: keys[0]`)
+  * `authentication_token_id` and `authentication_token` route handler parameters removed (use `accessTokenId` and `accessToken` instead)
+  * `ctx.authenticate()` function removed (wasn't used at all). Renamed: `ctx.jwt_id` -> `ctx.accessTokenId`, `ctx.jwt` -> `ctx.accessToken`, `ctx.authentication_error` -> removed, `ctx.token_data` -> `ctx.accessTokenPayload`
+  * `authentication.validate_token` option removed
+  * `parse_body` option renamed to `parseBody`
+
 0.4.3 / 13.12.2016
 ==================
 

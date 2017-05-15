@@ -22,7 +22,7 @@ describe(`web service`, function()
 			access_list: [],
 			authentication: () => {},
 			routing: '/api',
-			parse_body: false
+			parseBody: false
 		})
 
 		web.get ('/test', async () => ({ works  : true }))
@@ -55,7 +55,7 @@ describe(`web service`, function()
 			access_list: [],
 			authentication: () => {},
 			routing: '/api',
-			parse_body: true,
+			parseBody: true,
 			api: [require('./api/method')]
 		})
 

@@ -1,7 +1,8 @@
 import { exists, is_object } from './helpers'
 
 // httpstatuses.com
-export default
+// (all errors have camelCase aliases)
+const errors =
 {
 	// 400 Bad Request
 	//
@@ -21,6 +22,8 @@ export default
 	// valid authentication credentials for the target resource.
 	//
 	Unauthenticated : custom_error('Unauthenticated', { status: 401 }),
+
+	Access_token_expired : custom_error('Access token expired', { status: 401, type: 'ACCESS_TOKEN_EXPIRED' }),
 
 	// 403 Forbidden
 	//
@@ -101,8 +104,12 @@ function custom_error(name, default_properties = {})
 			{
 				// Set the property
 				this.data[key] = default_properties[key]
-				// Set the property shortcut
-				this[key]      = default_properties[key]
+				
+				// Set the property shortcut (e.g. `error.status`)
+				if (this[key] === undefined)
+				{
+					this[key] = this.data[key]
+				}
 			}
 
 			this.name    = name
@@ -118,8 +125,12 @@ function custom_error(name, default_properties = {})
 			{
 				// Set the property
 				this.data[key] = properties[key]
-				// Set the property shortcut
-				this[key]      = properties[key]
+
+				// Set the property shortcut (e.g. `error.status`)
+				if (this[key] === undefined)
+				{
+					this[key] = this.data[key]
+				}
 			}
 
 			// Capture stack trace (if available)
@@ -130,3 +141,13 @@ function custom_error(name, default_properties = {})
 		}
 	}
 }
+
+// camelCase aliases
+errors.MalformedInput       = errors.Malformed_input
+errors.AccessDenied         = errors.Access_denied
+errors.NotFound             = errors.Not_found
+errors.UnsupportedInputType = errors.Unsupported_input_type
+errors.InputRejected        = errors.Input_rejected
+errors.TooManyRequests      = errors.Too_many_requests
+
+export default errors

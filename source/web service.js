@@ -40,7 +40,7 @@ import rewrite        from './middleware/rewrite'
 // authentication      - uses a JWT token as a means of user authentication
 //                       (should be a function transforming token payload into user info)
 //
-// parse_body          - parse Http Post requests body (default: false; true when using routing)
+// parseBody           - parse Http Post requests body (default: false; true when using routing)
 //
 // routing             - enables Rest Http routing
 //                       (usage: web.get('/path', parameters => return 'Echo'))
@@ -216,9 +216,9 @@ export default function web_service(options = {})
 	{
 		web.use(authentication
 		({
-			authentication : options.authentication,
-			keys           : options.keys,
-			validate_token : options.validate_token
+			options : options.authentication,
+			keys    : options.keys,
+			log
 		}))
 	}
 
@@ -228,15 +228,15 @@ export default function web_service(options = {})
 		web.use(session(options.redis))
 	}
 
-	// Checks if `parse_body` needs to be set to `true`
+	// Checks if `parseBody` needs to be set to `true`
 	// (that's the case for routing)
-	if (options.parse_body !== false && options.routing === true)
+	if (options.parseBody !== false && options.routing === true)
 	{
-		options.parse_body = true
+		options.parseBody = true
 	}
 
 	// Enables HTTP POST body parsing
-	if (options.parse_body)
+	if (options.parseBody)
 	{
 		// Set up http post request handling.
 		// Usage: ctx.request.body
@@ -248,9 +248,9 @@ export default function web_service(options = {})
 	{
 		const { extensions, middleware } = routing
 		({
-			keys       : options.keys,
-			routing    : options.routing,
-			parse_body : options.parse_body
+			keys      : options.keys,
+			routing   : options.routing,
+			parseBody : options.parseBody
 		})
 
 		// Injects REST routing methods to `result` object.
@@ -310,9 +310,9 @@ export default function web_service(options = {})
 	result.file_upload = function()
 	{
 		// Check for misconfiguration
-		if (options.parse_body)
+		if (options.parseBody)
 		{
-			throw new Error(`.file_upload() was enabled but also "parse_body" wasn't set to false, therefore Http POST request bodies are parsed which creates a conflict. Set "parse_body" parameter to false.`)
+			throw new Error(`.file_upload() was enabled but also "parseBody" wasn't set to false, therefore Http POST request bodies are parsed which creates a conflict. Set "parseBody" parameter to false.`)
 		}
 
 		// Enable file uploading middleware
