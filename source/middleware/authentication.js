@@ -291,11 +291,11 @@ export function issue_jwt_token({ payload, key, userId, tokenId, issuer, audienc
 // Verifies a JWT token returning its payload
 // if it's valid and returning nothing otherwise.
 //
-// `options.ignoreExpiration = true` can be passed.
+// `{ ignoreExpiration: true }` can be passed to ignore token expiration.
 //
 export function verify_jwt_token(token, keys, options)
 {
-	let payload
+	let latest_error
 
 	for (const secret of keys)
 	{
@@ -308,6 +308,7 @@ export function verify_jwt_token(token, keys, options)
 			// Try another `secret`
 			if (error.name === 'JsonWebTokenError' && error.message === 'invalid signature')
 			{
+				latest_error = error
 				continue
 			}
 
@@ -315,4 +316,6 @@ export function verify_jwt_token(token, keys, options)
 			throw error
 		}
 	}
+
+	throw latest_error
 }
