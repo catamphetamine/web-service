@@ -107,7 +107,7 @@ async function authenticate({ options, keys, log })
 							catch (error)
 							{
 								// Try another `secret`
-								if (error.name === 'JsonWebTokenError')
+								if (error.name === 'JsonWebTokenError' && error.message === 'invalid signature')
 								{
 									continue
 								}
@@ -129,18 +129,8 @@ async function authenticate({ options, keys, log })
 			}
 
 			// Try another `secret`
-			if (error.name === 'JsonWebTokenError')
+			if (error.name === 'JsonWebTokenError' && error.message === 'invalid signature')
 			{
-				// `error.message`:
-				//
-				// 'jwt malformed'
-				// 'jwt signature is required'
-				// 'invalid signature'
-				// 'jwt audience invalid. expected: [OPTIONS AUDIENCE]'
-				// 'jwt issuer invalid. expected: [OPTIONS ISSUER]'
-				// 'jwt id invalid. expected: [OPTIONS JWT ID]'
-				// 'jwt subject invalid. expected: [OPTIONS SUBJECT]'
-				//
 				continue
 			}
 
@@ -298,8 +288,11 @@ export function issue_jwt_token({ payload, key, userId, tokenId, issuer, audienc
 	return token
 }
 
-// Generates and signs a JWT token.
+// Verifies a JWT token returning its payload
+// if it's valid and returning nothing otherwise.
+//
 // `options.ignoreExpiration = true` can be passed.
+//
 export function verify_jwt_token(token, keys, options)
 {
 	let payload
@@ -308,13 +301,12 @@ export function verify_jwt_token(token, keys, options)
 	{
 		try
 		{
-			payload = jwt.verify(token, secret, options)
-			break
+			return jwt.verify(token, secret, options)
 		}
 		catch (error)
 		{
 			// Try another `secret`
-			if (error.name === 'JsonWebTokenError')
+			if (error.name === 'JsonWebTokenError' && error.message === 'invalid signature')
 			{
 				continue
 			}
