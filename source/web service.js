@@ -143,9 +143,17 @@ export default function web_service(options = {})
 	// Create a Koa web application
 	const web = new koa()
 
-	// Trust `X-Forwarded-For` HTTP header
+	// Always trusts `X-Forwarded-For` HTTP header.
 	// https://en.wikipedia.org/wiki/X-Forwarded-For
-	web.proxy = true
+	// This means that a proxy **must** be set up
+	// which is gonna **replace** `X-Forwarded-For`
+	// with the real IP address of a client
+	// (otherwise a hacker could forge any IP address).
+	// The reason is that microservices are distributed
+	// randomly in a cloud in a VPN, therefore simple
+	// `requiest.getRemoteAddr()` call becomes useless for
+	// determining the original HTTP Request IP address.
+	web.proxy = options.xForwardedFor === false ? false : true
 
 	// Compresses HTTP response with GZIP
 	// (better delegate this task to NginX or HAProxy in production)
