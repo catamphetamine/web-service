@@ -1,7 +1,7 @@
 language: node_js
 node_js:
   # - "0.12" # Koa throws an error "Use of const in strict mode": const isGeneratorFunction = require('is-generator-function');
-  - "6.0"
+  # - "6.0"
   - "stable"
 sudo: false
 before_install:
