@@ -345,15 +345,34 @@ export default function web_service(options = {})
 				ctx.throw(405, 'Only HEAD and GET HTTP methods are allowed for requesting static files')
 			}
 
-			if (!await koa_send(ctx, ctx.path,
-			{
-				maxAge,
-				root: path.resolve(filesystem_path)
-			}))
+			let not_found
+
+			try
 			{
 				// `koa-send` throws if file not found
 				// but returns `undefined` if the path is a directory.
 				// Strange behaviour, so manually sending 404 Not found.
+				not_found = !await koa_send(ctx, ctx.path,
+				{
+					maxAge,
+					root: path.resolve(filesystem_path)
+				})
+			}
+			catch (error)
+			{
+				// Prevents exposing filesystem path in the HTTP response
+				if (error.statusCode === 404)
+				{
+					not_found = true
+				}
+				else
+				{
+					throw error
+				}
+			}
+
+			if (not_found)
+			{
 				ctx.throw(404, 'File not found')
 			}
 		}))
