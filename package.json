@@ -1,9 +1,9 @@
 {
   "name": "web-service",
-  "version": "0.5.3",
+  "version": "0.5.5",
   "description": "Instantiates web services: REST Api, file upload, etc",
   "main": "index.common.js",
-  "//jsnext:main": "index.es6.js",
+  "//module": "index.es6.js",
   "dependencies": {
     "async-busboy": "^0.1.0",
     "babel-runtime": "^6.6.1",
@@ -19,7 +19,7 @@
     "koa-locale": "^1.0.0",
     "koa-mount": "^2.0.0",
     "koa-router": "^7.0.1",
-    "koa-static": "^3.0.0",
+    "koa-send": "^4.1.0",
     "print-error": "^0.1.6",
     "superagent": "^2.1.0",
     "uid-safe": "^2.1.1"

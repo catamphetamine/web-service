@@ -9,7 +9,7 @@ import body_parser   from 'koa-bodyparser'
 import mount         from 'koa-mount'
 import koa_logger    from 'koa-bunyan'
 import compress      from 'koa-compress'
-import statics       from 'koa-static'
+import koa_send      from 'koa-send'
 import koa_locale    from 'koa-locale'
 
 import errors      from './errors'
@@ -332,16 +332,37 @@ export default function web_service(options = {})
 
 	// Serves static files
 	// (better do it with NginX or HAProxy in production)
-	result.serve_static_files = function(url_path, filesystem_path, options = {})
+	result.files = function(url_path, filesystem_path, options = {})
 	{
 		// Cache them in the web browser for 1 year by default
 		const maxAge = options.maxAge || 365 * 24 * 60 * 60
-		// https://github.com/koajs/static
-		web.use(mount(url_path, statics(filesystem_path, { maxAge })))
+
+		web.use(mount(url_path, async (ctx, next) =>
+		{
+			if (ctx.method !== 'HEAD' && ctx.method !== 'GET')
+			{
+				// 405 Method Not Allowed
+				ctx.throw(405, 'Only HEAD and GET HTTP methods are allowed for requesting static files')
+			}
+
+			if (!await koa_send(ctx, ctx.path,
+			{
+				maxAge,
+				root: path.resolve(filesystem_path)
+			}))
+			{
+				// `koa-send` throws if file not found
+				// but returns `undefined` if the path is a directory.
+				// Strange behaviour, so manually sending 404 Not found.
+				ctx.throw(404, 'File not found')
+			}
+		}))
 	}
 
-	// Shorter alias for static files serving
-	result.files = result.serve_static_files
+	// (deprecated)
+	// Legacy alias for static files serving.
+	// This should be removed in some future "major" version.
+	result.serve_static_files = result.files
 
 	// Mounts Koa middleware at path
 	result.mount = (path, handler) =>
