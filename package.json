@@ -1,6 +1,6 @@
 {
   "name": "web-service",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "description": "Instantiates web services: REST Api, file upload, etc",
   "main": "index.common.js",
   "//module": "index.es6.js",
@@ -48,7 +48,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/halt-hammerzeit/web-service.git"
+    "url": "git+https://github.com/catamphetamine/web-service.git"
   },
   "keywords": [
     "javascript",
@@ -61,10 +61,10 @@
     "density",
     "ddpx"
   ],
-  "author": "Halt Hammerzeit <halt.hammerzeit.at@gmail.com>",
+  "author": "catamphetamine <purecatamphetamine@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/halt-hammerzeit/web-service/issues"
+    "url": "https://github.com/catamphetamine/web-service/issues"
   },
-  "homepage": "https://github.com/halt-hammerzeit/web-service#readme"
+  "homepage": "https://github.com/catamphetamine/web-service#readme"
 }
