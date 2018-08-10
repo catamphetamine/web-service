@@ -1,7 +1,7 @@
 import chai from 'chai'
 chai.should()
 
-import webservice, { api, errors, http, acl, jwt, generate_unique_filename, generateUniqueFilename } from '../index.es6'
+import webservice, { api, errors, http, acl, jwt, generate_unique_filename, generateUniqueFilename } from '../index'
 
 describe(`exports`, function()
 {
@@ -18,9 +18,9 @@ describe(`exports`, function()
 		generateUniqueFilename.should.be.a('function')
 	})
 
-	it(`should export ES5`, () =>
+	it(`should export CommonJS`, () =>
 	{
-		const _ = require('../index.common')
+		const _ = require('../index.commonjs')
 
 		_.should.be.a('function')
 		_.api.should.be.a('function')

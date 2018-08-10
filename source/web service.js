@@ -159,8 +159,7 @@ export default function web_service(options = {})
 	// (better delegate this task to NginX or HAProxy in production)
 	if (options.compress)
 	{
-		// хз, нужно ли сжатие в node.js: мб лучше поставить впереди nginx'ы, 
-		// и ими сжимать, чтобы не нагружать процесс node.js
+		// Not sure if it even should be done here
 		web.use(compress())
 	}
 

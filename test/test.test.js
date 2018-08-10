@@ -13,7 +13,7 @@ describe(`web service`, function()
 			authentication: () => {},
 			routing: true
 		})
-		
+
 		web.get ('/test', async () => ({ works  : true }))
 		web.post('/test', async () => ({ posted : true }))
 
@@ -56,7 +56,9 @@ describe(`web service`, function()
 			authentication: () => {},
 			routing: '/api',
 			parseBody: true,
-			api: [require('./api/method')]
+			api: [
+				require('./api/method').default
+			]
 		})
 
 		await api.listen(9875)

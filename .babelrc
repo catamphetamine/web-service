@@ -1,13 +1,13 @@
 {
 	"presets":
 	[
-		"es2015", 
-		"stage-0"
+		"env"
 	],
 
 	"plugins":
 	[
 		"transform-runtime",
-		"add-module-exports"
+		"transform-object-rest-spread",
+		"transform-class-properties"
 	]
 }
